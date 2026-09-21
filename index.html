@@ -40,11 +40,40 @@ h1,h2,h3,h4{margin:0; font-weight:600; color:var(--head); letter-spacing:-.01em}
 .marke span{color:var(--primary); font-weight:700}
 .krumen{font-size:13px; color:#98A2B3; display:flex; gap:7px; align-items:center; min-width:0}
 .krumen b{color:#E4E7EC; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.kopf .rechts{margin-left:auto; display:flex; align-items:center; gap:10px}
-.kopf .konto{
+.kopf .rechts{margin-left:auto; display:flex; align-items:center; gap:10px; flex:0 0 auto}
+.kopf .dienst{
   font-size:12px; color:#C8CCD4; border:1px solid rgba(255,255,255,.2);
   border-radius:4px; padding:3px 9px; white-space:nowrap;
 }
+.kopf .dienst b{color:#fff; font-weight:600}
+
+/* ---------- Einführung oberhalb des Dashboards ---------- */
+.intro{background:var(--panel); border-bottom:1px solid var(--line); padding:30px 20px 28px}
+.intro-inner{max-width:1120px; margin:0 auto}
+.intro .eyebrow{
+  font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--primary);
+  font-weight:700; margin:0 0 8px;
+}
+.intro h1{font-size:clamp(24px,3.4vw,32px); line-height:1.2; margin:0 0 12px; text-wrap:balance}
+.intro .lead{font-size:15px; color:var(--text); max-width:82ch; margin:0 0 22px; line-height:1.6}
+.intro-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(270px,1fr)); gap:14px}
+.intro-grid > div{border:1px solid var(--line); border-radius:6px; padding:15px 17px; background:var(--bg)}
+.intro-grid h3{
+  font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);
+  margin-bottom:10px; font-weight:700;
+}
+.intro-grid ul{margin:0; padding-left:17px; font-size:13px; line-height:1.55}
+.intro-grid li{margin-bottom:7px}
+.intro-grid li:last-child{margin-bottom:0}
+.intro-grid li::marker{color:var(--primary)}
+.intro-grid li b{font-weight:600; color:var(--head)}
+.intro-grid a{font-weight:500}
+.intro-grid .url{font-family:var(--m); font-size:11.5px; color:var(--muted); display:block; margin-top:1px}
+.intro .sprung{
+  display:inline-block; margin-top:20px; font-size:13px; font-weight:600; color:var(--primary);
+  border:1px solid var(--primary); border-radius:4px; padding:7px 14px;
+}
+.intro .sprung:hover{background:var(--primary-bg); text-decoration:none}
 
 /* ---------- Hinweisband ---------- */
 .band{
@@ -232,7 +261,11 @@ code{font-family:var(--m); font-size:.88em; color:var(--primary); background:var
   }
   .seite[hidden]{display:none!important}
   .haupt{padding:14px 16px 50px}
-  .kopf .konto{display:none}
+  .intro{padding:22px 16px 22px}
+}
+@media (max-width:640px){
+  .kopf .dienst .lang{display:none}
+  .kopf .krumen{display:none}
 }
 @media (min-width:901px){ .seite{display:block!important} }
 </style>
@@ -243,12 +276,61 @@ code{font-family:var(--m); font-size:.88em; color:var(--primary); background:var
   </button>
   <span class="marke">wazuh<span>.</span></span>
   <span class="krumen" aria-live="polite">&rsaquo; <b id="krume">Module</b></span>
-  <span class="rechts"><span class="konto">admin</span></span>
+  <span class="rechts"><span class="dienst"><span class="lang">Ein kostenloser Service von </span><b>CYQORE</b> · Markus Schoening</span></span>
 </header>
 
+<section class="intro" aria-labelledby="intro-titel">
+  <div class="intro-inner">
+    <p class="eyebrow">Open Source · SIEM und XDR · GPLv2</p>
+    <h1 id="intro-titel">Wazuh — Sicherheitsüberwachung für Server, Arbeitsplätze und Cloud</h1>
+    <p class="lead">Wazuh sammelt Ereignisse von allen Endpunkten, bewertet sie mit Regeln, erkennt Schwachstellen und Konfigurationsfehler und reagiert auf Vorfälle — auf einer einzigen, quelloffenen Plattform. Es entstand 2015 als Fork von OSSEC und wird von der Wazuh Inc. weiterentwickelt. Der gesamte Funktionsumfang ist frei verfügbar; bezahlt wird nur, wer Support oder die gehostete Cloud-Variante möchte.</p>
+
+    <div class="intro-grid">
+      <div>
+        <h3>Was es macht</h3>
+        <ul>
+          <li><b>Log-Analyse und Alarmierung</b> — Ereignisse aus Betriebssystemen, Anwendungen, Firewalls und Cloud-Diensten an einem Ort, bewertet nach Schweregrad</li>
+          <li><b>Dateiintegrität</b> — Änderungen an Dateien, Verzeichnissen und der Windows-Registry, mit Benutzer und auslösendem Prozess</li>
+          <li><b>Schwachstellenerkennung</b> — Abgleich des Paketbestands gegen CVE-Feeds, ohne aktiven Scan über das Netz</li>
+          <li><b>Härtungsprüfung</b> — Endpunkte gegen CIS-Benchmarks, mit Soll- und Ist-Wert je Prüfpunkt</li>
+          <li><b>Malware- und Rootkit-Erkennung</b> — Rootcheck, YARA-Regeln, VirusTotal-Abgleich</li>
+          <li><b>Active Response</b> — automatische Reaktion: IP sperren, Konto deaktivieren, Prozess beenden</li>
+          <li><b>Compliance-Nachweise</b> — Zuordnung zu PCI DSS, DSGVO, HIPAA, NIST 800-53 und TSC</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Wo man es einsetzt</h3>
+        <ul>
+          <li><b>Server und Arbeitsplätze</b> — Linux, Windows, macOS; vom einzelnen Root-Server bis zum Rechenzentrum mit tausenden Endpunkten</li>
+          <li><b>Cloud-Workloads</b> — AWS, Azure, Google Cloud, dazu Microsoft 365, GitHub und Docker/Kubernetes</li>
+          <li><b>Netzwerkgeräte</b> — Firewalls und Switches agentenlos per Syslog</li>
+          <li><b>Kleine und mittlere Unternehmen</b>, die ein SIEM brauchen, aber kein Lizenzbudget für Splunk oder Elastic Security haben</li>
+          <li><b>Dienstleister und MSSPs</b>, die viele Mandanten auf einer Plattform überwachen</li>
+          <li><b>Regulierte Bereiche</b> — Behörden, Gesundheitswesen, Finanzdienstleister, Zahlungsabwickler mit Nachweispflichten</li>
+          <li>Als <b>Ergänzung zu einem EDR</b>, nicht als dessen Ersatz — Wazuh erkennt und reagiert per Skript, blockiert aber nicht im Kernel</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Wo man es bekommt</h3>
+        <ul>
+          <li><a href="https://wazuh.com/" target="_blank" rel="noopener">Offizielle Website</a><span class="url">wazuh.com</span></li>
+          <li><a href="https://documentation.wazuh.com/current/" target="_blank" rel="noopener">Dokumentation</a><span class="url">documentation.wazuh.com</span></li>
+          <li><a href="https://github.com/wazuh/wazuh" target="_blank" rel="noopener">Quellcode auf GitHub</a><span class="url">github.com/wazuh/wazuh</span></li>
+          <li><a href="https://packages.wazuh.com/" target="_blank" rel="noopener">Pakete und Installationsassistent</a><span class="url">packages.wazuh.com — Befehl unter „Installation &amp; Betrieb"</span></li>
+          <li><a href="https://github.com/wazuh/wazuh-docker" target="_blank" rel="noopener">Docker-Images</a><span class="url">github.com/wazuh/wazuh-docker</span></li>
+          <li><a href="https://wazuh.com/community/" target="_blank" rel="noopener">Community</a><span class="url">Slack, Google Group, Forum — wazuh.com/community</span></li>
+          <li><a href="https://wazuh.com/cloud/" target="_blank" rel="noopener">Wazuh Cloud</a><span class="url">gehostete Variante, kostenpflichtig — wazuh.com/cloud</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <a class="sprung" href="#geruest">Zum Nachbau des Dashboards ↓</a>
+  </div>
+</section>
+
 <div class="band">
-  <b>Nachbau zu Schulungszwecken.</b>
-  <span>Keine laufende Wazuh-Installation und keine Seite der Wazuh Inc. Agenten, Alarme und Kennzahlen sind erfunden; Modulnamen, Regel-IDs, Feldnamen und Konfigurationsblöcke entsprechen dem echten Wazuh 4.14. Erstellt von CYQORE. Beim Überfahren jedes Eintrags erscheint, was das Modul zeigt und tut.</span>
+  <b>Das Dashboard unten ist ein Nachbau zu Schulungszwecken.</b>
+  <span>Keine laufende Wazuh-Installation und keine Seite der Wazuh Inc. Agenten, Alarme und Kennzahlen sind erfunden; Modulnamen, Regel-IDs, Feldnamen und Konfigurationsblöcke entsprechen dem echten Wazuh 4.14. Beim Überfahren jedes Eintrags erscheint, was das Modul zeigt und tut.</span>
 </div>
 
 <noscript>
@@ -258,14 +340,14 @@ code{font-family:var(--m); font-size:.88em; color:var(--primary); background:var
   </div>
 </noscript>
 
-<div class="geruest">
+<div class="geruest" id="geruest">
   <nav class="seite" id="seite" aria-label="Module"></nav>
   <main class="haupt" id="haupt" tabindex="-1"></main>
 </div>
 
 <footer class="fuss">
-  <p>Technische Übersicht für Administratoren · Wazuh 4.14 · Stand September 2026</p>
-  <p>Wazuh ist ein Produkt der Wazuh Inc. Diese Seite ist eine unabhängige Erklärhilfe von CYQORE und keine offizielle Dokumentation.</p>
+  <p>Ein kostenloser Service von <b>CYQORE</b> · Markus Schoening · Wazuh 4.14 · Stand September 2026</p>
+  <p>Wazuh ist ein Produkt der Wazuh Inc. Diese Seite ist eine unabhängige Erklärhilfe und keine offizielle Dokumentation. Alle Links führen zu den offiziellen Quellen des Projekts.</p>
 </footer>
 
 <div id="tip" role="tooltip"></div>
