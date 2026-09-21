@@ -46,6 +46,10 @@ h1,h2,h3,h4{margin:0; font-weight:600; color:var(--head); letter-spacing:-.01em}
   border-radius:4px; padding:3px 9px; white-space:nowrap;
 }
 .kopf .dienst b{color:#fff; font-weight:600}
+.kopf .dienst a{color:#fff}
+.kopf .dienst a:hover{color:#7FB3D8; text-decoration:none}
+.fuss a{color:var(--primary)}
+.fuss a b{color:var(--primary)}
 
 /* ---------- Einführung oberhalb des Dashboards ---------- */
 .intro{background:var(--panel); border-bottom:1px solid var(--line); padding:30px 20px 28px}
@@ -276,7 +280,7 @@ code{font-family:var(--m); font-size:.88em; color:var(--primary); background:var
   </button>
   <span class="marke">wazuh<span>.</span></span>
   <span class="krumen" aria-live="polite">&rsaquo; <b id="krume">Module</b></span>
-  <span class="rechts"><span class="dienst"><span class="lang">Ein kostenloser Service von </span><b>CYQORE</b> · Markus Schoening</span></span>
+  <span class="rechts"><span class="dienst"><span class="lang">Ein kostenloser Service von </span><a href="https://www.cyqore.de/" target="_blank" rel="noopener"><b>CYQORE</b></a> · Markus Schoening</span></span>
 </header>
 
 <section class="intro" aria-labelledby="intro-titel">
@@ -346,7 +350,8 @@ code{font-family:var(--m); font-size:.88em; color:var(--primary); background:var
 </div>
 
 <footer class="fuss">
-  <p>Ein kostenloser Service von <b>CYQORE</b> · Markus Schoening · Wazuh 4.14 · Stand September 2026</p>
+  <p>Ein kostenloser Service von <a href="https://www.cyqore.de/" target="_blank" rel="noopener"><b>CYQORE</b></a> · Markus Schoening · <a href="https://www.cyqore.de/" target="_blank" rel="noopener">www.cyqore.de</a></p>
+  <p>Wazuh 4.14 · Stand September 2026</p>
   <p>Wazuh ist ein Produkt der Wazuh Inc. Diese Seite ist eine unabhängige Erklärhilfe und keine offizielle Dokumentation. Alle Links führen zu den offiziellen Quellen des Projekts.</p>
 </footer>
 
