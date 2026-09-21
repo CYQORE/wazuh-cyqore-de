@@ -1,0 +1,428 @@
+<title>Wazuh für Administratoren</title>
+<!-- Keine externen Aufrufe: Schriften kommen aus dem System, die Wortmarke ist eingebettet. -->
+<style>
+:root{
+  --cy-pink:#E7095B; --cy-pink-deep:#A61F42; --cy-pink-glow:#F23D7B;
+  --cy-black:#000; --cy-bg-dark:#0A0A0B; --cy-surface:#141416; --cy-bordeaux:#2F0012;
+  --cy-text:#F5F5F7; --cy-text-muted:#9CA0A8; --cy-text-dim:#6E6E73;
+  --cy-line:rgba(255,255,255,.09); --cy-line-soft:rgba(255,255,255,.055);
+  --cy-font:'Inter',system-ui,Helvetica,Arial,sans-serif;
+  --cy-mono:ui-monospace,SFMono-Regular,'JetBrains Mono',Menlo,Consolas,monospace;
+  --cy-radius:12px; --cy-radius-card:16px;
+  --sev-low:#8A8F99; --sev-mid:#D99A2B; --sev-high:var(--cy-pink);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%; scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto} *{animation:none!important;transition:none!important}}
+body{
+  margin:0; font-family:var(--cy-font); color:var(--cy-text); font-size:16px; line-height:1.65;
+  background:var(--cy-black);
+  background-image:radial-gradient(ellipse at 30% 0%,var(--cy-bordeaux) 0%,var(--cy-black) 62%);
+  background-attachment:fixed; -webkit-font-smoothing:antialiased;
+}
+a{color:var(--cy-pink); text-decoration:none}
+a:hover{color:var(--cy-pink-glow)}
+:focus-visible{outline:2px solid var(--cy-pink-glow); outline-offset:3px; border-radius:4px}
+
+/* ---- Kopf ---- */
+.top{
+  position:sticky; top:env(safe-area-inset-top,0px); z-index:20;
+  display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  padding:14px 20px; background:rgba(4,4,5,.86); backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--cy-line-soft);
+}
+.wortmarke{display:flex; align-items:center; gap:14px}
+.wortmarke img{height:20px; width:auto; display:block}
+.wortmarke span{
+  font-size:11px; font-weight:700; letter-spacing:.34em; text-transform:uppercase;
+  color:var(--cy-pink); padding-left:14px; border-left:1px solid rgba(255,255,255,.16);
+}
+.top nav{display:flex; gap:20px; flex-wrap:wrap; font-size:13px}
+.top nav a{color:var(--cy-text-muted)}
+.top nav a:hover{color:var(--cy-pink)}
+
+.wrap{max-width:960px; margin:0 auto; padding:0 20px}
+section{padding-block:56px; border-top:1px solid var(--cy-line-soft)}
+section:first-of-type{border-top:0}
+
+/* ---- Typografie ---- */
+.kicker{
+  margin:0 0 14px; font-size:11px; letter-spacing:.24em; text-transform:uppercase;
+  color:var(--cy-pink); font-weight:600;
+}
+h1{font-size:clamp(34px,6.4vw,56px); line-height:1.06; letter-spacing:-.025em; margin:0 0 22px; text-wrap:balance}
+h2{font-size:clamp(23px,3.4vw,31px); line-height:1.2; letter-spacing:-.018em; margin:0 0 18px; text-wrap:balance}
+h3{font-size:16px; font-weight:600; letter-spacing:-.005em; margin:0 0 7px}
+p{margin:0 0 16px; max-width:68ch}
+.lead{font-size:18px; color:var(--cy-text-muted); max-width:62ch}
+.hero{padding-block:64px 52px}
+.muted{color:var(--cy-text-muted)}
+code{font-family:var(--cy-mono); font-size:.87em; color:var(--cy-pink-glow); background:rgba(231,9,91,.09); padding:2px 6px; border-radius:5px; white-space:nowrap}
+
+/* ---- Steckbrief ---- */
+.fakten{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1px;
+  background:var(--cy-line-soft); border:1px solid var(--cy-line-soft);
+  border-radius:var(--cy-radius-card); overflow:hidden; margin-top:36px;
+}
+.fakten div{background:#09090B; padding:18px 20px}
+.fakten dt{font-size:10.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--cy-text-dim); margin:0 0 6px}
+.fakten dd{margin:0; font-size:15px; font-weight:600}
+
+/* ---- Diagramm ---- */
+.diagramm{overflow-x:auto; margin:8px 0 14px; padding-bottom:6px}
+.diagramm svg{display:block; min-width:660px; max-width:100%; height:auto; margin:0 auto}
+figcaption{font-size:13.5px; color:var(--cy-text-dim); max-width:68ch}
+
+/* ---- Komponenten ---- */
+.komp{display:grid; grid-template-columns:repeat(auto-fit,minmax(255px,1fr)); gap:14px; margin-top:8px}
+.komp article{
+  background:var(--cy-surface); border:1px solid var(--cy-line); border-radius:var(--cy-radius-card);
+  padding:22px 22px 20px;
+}
+.komp .daemon{font-family:var(--cy-mono); font-size:11.5px; color:var(--cy-text-dim); display:block; margin-bottom:10px}
+.komp p{font-size:14.5px; color:var(--cy-text-muted); margin:0}
+
+/* ---- Tabellen ---- */
+.tabelle{overflow-x:auto; margin:4px 0 18px}
+table{border-collapse:collapse; width:100%; min-width:520px; font-size:14.5px}
+th,td{text-align:left; padding:11px 14px; border-bottom:1px solid var(--cy-line-soft); vertical-align:top}
+th{font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--cy-text-dim); font-weight:600; white-space:nowrap}
+td.port{font-family:var(--cy-mono); color:var(--cy-pink-glow); white-space:nowrap; font-variant-numeric:tabular-nums}
+td.pfad{font-family:var(--cy-mono); font-size:13px; white-space:nowrap}
+
+/* ---- Fähigkeiten ---- */
+.faehig{display:grid; grid-template-columns:repeat(auto-fit,minmax(272px,1fr)); gap:26px 34px; margin-top:8px}
+.faehig h3{display:flex; align-items:baseline; gap:10px}
+.faehig h3 b{font-family:var(--cy-mono); font-size:11px; font-weight:500; color:var(--cy-pink); letter-spacing:.05em}
+.faehig p{font-size:14.5px; color:var(--cy-text-muted); margin:0}
+
+/* ---- Schweregrade ---- */
+.stufen{display:flex; flex-direction:column; gap:10px; margin:6px 0 20px}
+.stufe{display:grid; grid-template-columns:62px 1fr; gap:16px; align-items:start}
+.stufe b{
+  font-family:var(--cy-mono); font-size:12.5px; font-weight:500; text-align:center;
+  padding:4px 0; border-radius:6px; color:#09090B; font-variant-numeric:tabular-nums;
+}
+.s-low b{background:var(--sev-low)} .s-mid b{background:var(--sev-mid)} .s-high b{background:var(--sev-high); color:#fff}
+.stufe span{font-size:14.5px; color:var(--cy-text-muted)}
+
+/* ---- Code ---- */
+pre{
+  margin:0 0 18px; overflow-x:auto; background:#08080A; border:1px solid var(--cy-line);
+  border-radius:var(--cy-radius); padding:16px 18px; font-family:var(--cy-mono);
+  font-size:13px; line-height:1.7; color:#D6D8DD;
+}
+pre b{color:var(--cy-pink-glow); font-weight:400}
+pre i{color:var(--cy-text-dim); font-style:normal}
+.dateiname{
+  font-family:var(--cy-mono); font-size:11.5px; color:var(--cy-text-dim);
+  display:block; margin:0 0 7px; letter-spacing:.03em;
+}
+
+/* ---- Hinweis ---- */
+.hinweis{
+  border-left:2px solid var(--cy-pink); background:rgba(231,9,91,.055);
+  padding:16px 20px; border-radius:0 var(--cy-radius) var(--cy-radius) 0; margin:4px 0 20px;
+}
+.hinweis p{margin:0; font-size:14.5px; color:var(--cy-text-muted)}
+.hinweis p+p{margin-top:10px}
+
+/* ---- Abwägung ---- */
+.abwaegung{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:14px; margin-top:8px}
+.abwaegung div{border:1px solid var(--cy-line); border-radius:var(--cy-radius-card); padding:20px 22px; background:#09090B}
+.abwaegung h3{font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--cy-text-dim); margin-bottom:12px}
+.abwaegung ul{margin:0; padding-left:19px; font-size:14.5px; color:var(--cy-text-muted)}
+.abwaegung li{margin-bottom:9px}
+.abwaegung li:last-child{margin-bottom:0}
+.abwaegung li::marker{color:var(--cy-pink)}
+
+/* ---- Fuß ---- */
+.fuss{
+  border-top:1px solid var(--cy-line-soft); padding:34px 20px 48px; text-align:center;
+  font-size:13px; color:var(--cy-text-dim);
+}
+.fuss p{margin:0 auto 8px; max-width:64ch}
+</style>
+
+<header class="top">
+  <div class="wortmarke">
+    <img src="data:image/png;base64,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" alt="CYQORE">
+    <span>Wazuh</span>
+  </div>
+  <nav>
+    <a href="#architektur">Architektur</a>
+    <a href="#komponenten">Komponenten</a>
+    <a href="#ports">Ports</a>
+    <a href="#faehigkeiten">Fähigkeiten</a>
+    <a href="#regeln">Regeln</a>
+    <a href="#betrieb">Betrieb</a>
+  </nav>
+</header>
+
+<div class="wrap">
+
+  <section class="hero">
+    <p class="kicker">Open-Source-SIEM &amp; XDR</p>
+    <h1>Wazuh, erklärt für Administratoren</h1>
+    <p class="lead">Eine Plattform, die Logs sammelt, Dateiänderungen überwacht, Schwachstellen im Paketbestand erkennt und auf Vorfälle reagiert — quelloffen, ohne Funktionen hinter einer Lizenzschranke. Diese Seite zeigt, woraus sie besteht, wie die Daten fließen und was der Betrieb kostet.</p>
+    <dl class="fakten">
+      <div><dt>Lizenz</dt><dd>GPLv2</dd></div>
+      <div><dt>Ursprung</dt><dd>OSSEC-Fork, 2015</dd></div>
+      <div><dt>Versionslinie</dt><dd>4.14</dd></div>
+      <div><dt>Installationswurzel</dt><dd>/var/ossec</dd></div>
+    </dl>
+  </section>
+
+  <section id="architektur">
+    <p class="kicker">01 — Aufbau</p>
+    <h2>Vier Bausteine, ein Datenstrom</h2>
+    <p>Agenten auf den Endpunkten sammeln Ereignisse und schicken sie verschlüsselt an den Server. Der Server zerlegt sie mit Decodern, bewertet sie mit Regeln und erzeugt Alarme. Filebeat schiebt die Alarme in den Indexer, das Dashboard macht sie durchsuchbar.</p>
+
+    <figure class="diagramm">
+      <svg viewBox="0 0 882 356" role="img" aria-label="Datenfluss von den Endpunkten über den Wazuh-Server zu Indexer und Dashboard">
+        <defs>
+          <marker id="pfeil" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#E7095B"></path>
+          </marker>
+        </defs>
+
+        <text x="92"  y="24" fill="#6E6E73" font-family="Inter,system-ui,Helvetica,Arial,sans-serif" font-size="10.5" font-weight="600" letter-spacing="1.8" text-anchor="middle">ENDPUNKTE</text>
+        <text x="430" y="24" fill="#6E6E73" font-family="Inter,system-ui,Helvetica,Arial,sans-serif" font-size="10.5" font-weight="600" letter-spacing="1.8" text-anchor="middle">WAZUH-SERVER</text>
+        <text x="765" y="24" fill="#6E6E73" font-family="Inter,system-ui,Helvetica,Arial,sans-serif" font-size="10.5" font-weight="600" letter-spacing="1.8" text-anchor="middle">SPEICHER &amp; SICHT</text>
+
+        <g font-family="Inter,system-ui,Helvetica,Arial,sans-serif">
+          <rect x="12" y="44"  width="160" height="46" rx="10" fill="#141416" stroke="rgba(255,255,255,.12)"></rect>
+          <text x="92" y="72"  fill="#F5F5F7" font-size="13" text-anchor="middle">Linux-Server</text>
+          <rect x="12" y="102" width="160" height="46" rx="10" fill="#141416" stroke="rgba(255,255,255,.12)"></rect>
+          <text x="92" y="130" fill="#F5F5F7" font-size="13" text-anchor="middle">Windows-Clients</text>
+          <rect x="12" y="160" width="160" height="46" rx="10" fill="#141416" stroke="rgba(255,255,255,.12)"></rect>
+          <text x="92" y="188" fill="#F5F5F7" font-size="13" text-anchor="middle">Cloud &amp; Container</text>
+          <text x="92" y="226" fill="#6E6E73" font-size="11" text-anchor="middle">wazuh-agent</text>
+
+          <rect x="330" y="44" width="200" height="162" rx="12" fill="#141416" stroke="#A61F42"></rect>
+          <text x="430" y="74"  fill="#F5F5F7" font-size="14" font-weight="600" text-anchor="middle">Wazuh-Manager</text>
+          <text x="430" y="106" fill="#9CA0A8" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="11.5" text-anchor="middle">wazuh-remoted</text>
+          <text x="430" y="130" fill="#9CA0A8" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="11.5" text-anchor="middle">wazuh-analysisd</text>
+          <text x="430" y="154" fill="#9CA0A8" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="11.5" text-anchor="middle">wazuh-db</text>
+          <text x="430" y="186" fill="#6E6E73" font-size="11" text-anchor="middle">Decoder · Regeln · Alarme</text>
+
+          <rect x="660" y="44" width="210" height="84" rx="12" fill="#141416" stroke="rgba(255,255,255,.12)"></rect>
+          <text x="765" y="78"  fill="#F5F5F7" font-size="13.5" font-weight="600" text-anchor="middle">Wazuh-Indexer</text>
+          <text x="765" y="100" fill="#6E6E73" font-size="11" text-anchor="middle">OpenSearch-Fork</text>
+
+          <rect x="660" y="160" width="210" height="84" rx="12" fill="#141416" stroke="rgba(255,255,255,.12)"></rect>
+          <text x="765" y="194" fill="#F5F5F7" font-size="13.5" font-weight="600" text-anchor="middle">Wazuh-Dashboard</text>
+          <text x="765" y="216" fill="#6E6E73" font-size="11" text-anchor="middle">Suche · Alarme · Berichte</text>
+
+          <rect x="660" y="286" width="210" height="50" rx="10" fill="#09090B" stroke="rgba(255,255,255,.12)"></rect>
+          <text x="765" y="310" fill="#F5F5F7" font-size="13" text-anchor="middle">Administrator</text>
+          <text x="765" y="327" fill="#6E6E73" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="10.5" text-anchor="middle">443/TCP</text>
+
+          <line x1="178" y1="125" x2="322" y2="125" stroke="#E7095B" stroke-width="1.6" marker-end="url(#pfeil)"></line>
+          <text x="250" y="113" fill="#9CA0A8" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="10.5" text-anchor="middle">1514 · AES-256</text>
+          <text x="250" y="145" fill="#6E6E73" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="10.5" text-anchor="middle">1515 · Enrollment</text>
+
+          <line x1="536" y1="86" x2="652" y2="86" stroke="#E7095B" stroke-width="1.6" marker-end="url(#pfeil)"></line>
+          <text x="594" y="68" fill="#9CA0A8" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="10.5" text-anchor="middle">Filebeat</text>
+          <text x="594" y="106" fill="#6E6E73" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="10.5" text-anchor="middle">TLS 9200</text>
+
+          <line x1="536" y1="202" x2="652" y2="202" stroke="#E7095B" stroke-width="1.6" marker-end="url(#pfeil)"></line>
+          <text x="594" y="184" fill="#9CA0A8" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="10.5" text-anchor="middle">API</text>
+          <text x="594" y="222" fill="#6E6E73" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="10.5" text-anchor="middle">55000</text>
+
+          <line x1="765" y1="128" x2="765" y2="154" stroke="#E7095B" stroke-width="1.6" marker-end="url(#pfeil)"></line>
+          <line x1="765" y1="280" x2="765" y2="250" stroke="#E7095B" stroke-width="1.6" marker-end="url(#pfeil)"></line>
+        </g>
+      </svg>
+      <figcaption>Die Agenten bauen die Verbindung nach außen auf — der Server verbindet sich nie zurück zum Endpunkt. Für die Firewall heißt das: nur eingehend auf 1514 und 1515 am Server öffnen, nichts in Richtung der Clients.</figcaption>
+    </figure>
+  </section>
+
+  <section id="komponenten">
+    <p class="kicker">02 — Komponenten</p>
+    <h2>Was jeder Baustein tut</h2>
+    <div class="komp">
+      <article>
+        <h3>Wazuh-Agent</h3>
+        <span class="daemon">wazuh-agentd · logcollector · syscheckd</span>
+        <p>Läuft auf Linux, Windows, macOS, AIX und Solaris. Liest Logdateien und das Windows-Eventlog, überwacht Dateien und Registry, inventarisiert Pakete und offene Ports. Ressourcenbedarf im Ruhezustand ist gering — die Auswertung passiert auf dem Server, nicht auf dem Endpunkt.</p>
+      </article>
+      <article>
+        <h3>Wazuh-Manager</h3>
+        <span class="daemon">wazuh-remoted · analysisd · modulesd · execd</span>
+        <p>Nimmt die Ereignisse an, normalisiert sie über Decoder zu Feldern und bewertet sie gegen den Regelsatz. Erzeugt Alarme, hält den Agentenbestand, verteilt Konfiguration in Gruppen und löst Active-Response-Aktionen aus.</p>
+      </article>
+      <article>
+        <h3>Wazuh-Indexer</h3>
+        <span class="daemon">OpenSearch · Filebeat</span>
+        <p>Speichert Alarme und Ereignisse in Tagesindizes und macht sie durchsuchbar. Der ressourcenhungrigste Teil der Installation: Der Java-Heap bestimmt, wie viel RAM die Maschine tatsächlich braucht.</p>
+      </article>
+      <article>
+        <h3>Wazuh-Dashboard</h3>
+        <span class="daemon">OpenSearch Dashboards</span>
+        <p>Weboberfläche für Suche, Alarme, Agentenverwaltung und Compliance-Berichte. Holt die Ereignisse aus dem Indexer und die Konfiguration über die API vom Manager — es ist also auf beide angewiesen.</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="ports">
+    <p class="kicker">03 — Netzwerk</p>
+    <h2>Ports und Datenwege</h2>
+    <p>Die Tabelle ist die Vorlage für Firewall-Regeln. Bei einer All-in-one-Installation bleiben 9200 und 55000 auf dem Loopback — nach außen muss dann nur 1514, 1515 und 443.</p>
+    <div class="tabelle">
+      <table>
+        <thead>
+          <tr><th>Port</th><th>Protokoll</th><th>Von → nach</th><th>Zweck</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="port">1514</td><td>TCP/UDP</td><td>Agent → Manager</td><td>Ereignisse, AES-256-verschlüsselt, dauerhafte Verbindung</td></tr>
+          <tr><td class="port">1515</td><td>TCP</td><td>Agent → Manager</td><td>Registrierung des Agenten, einmalig pro Endpunkt</td></tr>
+          <tr><td class="port">9200</td><td>TCP</td><td>Filebeat, Dashboard → Indexer</td><td>REST-API des Indexers, TLS</td></tr>
+          <tr><td class="port">9300</td><td>TCP</td><td>Indexer ↔ Indexer</td><td>Cluster-Kommunikation, nur im Mehrknotenbetrieb</td></tr>
+          <tr><td class="port">55000</td><td>TCP</td><td>Dashboard, Skripte → Manager</td><td>Wazuh-API: Agenten, Konfiguration, Regeln</td></tr>
+          <tr><td class="port">443</td><td>TCP</td><td>Browser → Dashboard</td><td>Weboberfläche über HTTPS</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="faehigkeiten">
+    <p class="kicker">04 — Funktionsumfang</p>
+    <h2>Was die Plattform abdeckt</h2>
+    <div class="faehig">
+      <div>
+        <h3>Log-Analyse <b>analysisd</b></h3>
+        <p>Sammelt Logs von Endpunkten und agentenlos per Syslog von Firewalls, Switches und Appliances. Decoder zerlegen die Rohzeile in Felder, Regeln bewerten sie.</p>
+      </div>
+      <div>
+        <h3>File Integrity Monitoring <b>syscheckd</b></h3>
+        <p>Überwacht Verzeichnisse und Registry auf Änderungen an Inhalt, Rechten und Eigentümer. Im Echtzeitmodus meldet es zusätzlich, welcher Prozess und welcher Benutzer die Änderung ausgelöst hat.</p>
+      </div>
+      <div>
+        <h3>Vulnerability Detection <b>modulesd</b></h3>
+        <p>Gleicht das vom Agenten gemeldete Paketinventar gegen CVE-Feeds ab. Zeigt also verwundbare Software, ohne dass ein aktiver Scan über das Netz laufen muss.</p>
+      </div>
+      <div>
+        <h3>Security Configuration Assessment <b>SCA</b></h3>
+        <p>Prüft Endpunkte regelmäßig gegen Härtungsvorgaben nach CIS-Benchmark und meldet abweichende Einstellungen mit Soll- und Ist-Wert.</p>
+      </div>
+      <div>
+        <h3>Active Response <b>execd</b></h3>
+        <p>Führt bei passenden Alarmen ein Skript aus — IP über iptables sperren, Konto deaktivieren, Prozess beenden. Zeitlich begrenzt oder dauerhaft, konfigurierbar pro Regel.</p>
+      </div>
+      <div>
+        <h3>MITRE ATT&amp;CK</h3>
+        <p>Alarme sind auf Taktiken und Techniken gemappt. Das ersetzt keine eigene Analyse, gibt der Auswertung aber eine Sprache, die auch außerhalb des Teams verstanden wird.</p>
+      </div>
+      <div>
+        <h3>Compliance-Berichte</h3>
+        <p>Fertige Sichten für PCI DSS, GDPR, HIPAA, NIST 800-53 und TSC. Nützlich als Nachweisgrundlage im Audit — ein Testat ist es nicht.</p>
+      </div>
+      <div>
+        <h3>Cloud &amp; Container</h3>
+        <p>Module für AWS, Azure, Google Cloud, Office 365, GitHub, Docker und Kubernetes holen Ereignisse direkt aus den jeweiligen APIs.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="regeln">
+    <p class="kicker">05 — Auswertung</p>
+    <h2>Decoder, Regeln, Schweregrade</h2>
+    <p>Jedes Ereignis durchläuft zwei Stufen. Der Decoder zerlegt die Rohzeile in benannte Felder, die Regel entscheidet anhand dieser Felder, ob ein Alarm entsteht und wie schwer er wiegt. Die Schweregrade reichen von 0 bis 15.</p>
+
+    <div class="stufen">
+      <div class="stufe s-low"><b>0–3</b><span>Information und Rauschen. Stufe 0 wird bewusst verworfen und erzeugt keinen Alarm — der übliche Weg, Fehlalarme abzuschalten.</span></div>
+      <div class="stufe s-mid"><b>4–11</b><span>Auffällig bis ernst: fehlgeschlagene Anmeldungen, Konfigurationsänderungen, Integritätsverletzungen an überwachten Dateien.</span></div>
+      <div class="stufe s-high"><b>12–15</b><span>Hohe Priorität. Ab Stufe 12 gehören Benachrichtigung und Active Response eingerichtet, sonst liest sie niemand rechtzeitig.</span></div>
+    </div>
+
+    <p>Eigene Regeln kommen nie in die mitgelieferten Dateien, sondern immer in die lokalen — sonst überschreibt das nächste Paketupdate die Arbeit:</p>
+    <span class="dateiname">/var/ossec/etc/rules/local_rules.xml</span>
+<pre><i>&lt;!-- Drei fehlgeschlagene SSH-Anmeldungen derselben IP in 60 Sekunden --&gt;</i>
+<b>&lt;group</b> name="local,syslog,sshd,"<b>&gt;</b>
+  <b>&lt;rule</b> id="100001" level="10" frequency="3" timeframe="60"<b>&gt;</b>
+    <b>&lt;if_matched_sid&gt;</b>5760<b>&lt;/if_matched_sid&gt;</b>
+    <b>&lt;same_source_ip /&gt;</b>
+    <b>&lt;description&gt;</b>SSH: mehrfach fehlgeschlagene Anmeldung<b>&lt;/description&gt;</b>
+    <b>&lt;mitre&gt;&lt;id&gt;</b>T1110<b>&lt;/id&gt;&lt;/mitre&gt;</b>
+  <b>&lt;/rule&gt;</b>
+<b>&lt;/group&gt;</b></pre>
+
+    <div class="hinweis">
+      <p>Eigene IDs ab <code>100000</code> vergeben — darunter liegt der mitgelieferte Regelsatz, und Kollisionen führen zu still verworfenen Regeln.</p>
+      <p>Vor dem Neustart prüfen mit <code>/var/ossec/bin/wazuh-logtest</code>: Dort eine echte Logzeile einfügen und ansehen, welcher Decoder greift und welche Regel auslöst. Das spart die Runde über Neustart und Logsuche.</p>
+    </div>
+  </section>
+
+  <section id="betrieb">
+    <p class="kicker">06 — Betrieb</p>
+    <h2>Installation und Dimensionierung</h2>
+    <p>Für eine All-in-one-Installation, also Indexer, Manager und Dashboard auf derselben Maschine, gibt es einen Installationsassistenten:</p>
+<pre>curl -sO https://packages.wazuh.com/4.14/wazuh-install.sh
+sudo bash ./wazuh-install.sh <b>-a</b></pre>
+    <p class="muted">Der Assistent erzeugt Zertifikate, richtet alle drei Dienste ein und gibt am Ende das Passwort für den Benutzer <code>admin</code> aus. Dieses Passwort erscheint genau einmal im Terminal.</p>
+
+    <div class="tabelle">
+      <table>
+        <thead><tr><th>Aufbau</th><th>RAM</th><th>CPU</th><th>Trägt</th></tr></thead>
+        <tbody>
+          <tr><td>Minimum</td><td>4 GB</td><td>2 Kerne</td><td>Labor und erste Tests</td></tr>
+          <tr><td>Empfohlen</td><td>16 GB</td><td>8 Kerne</td><td>rund 100 Endpunkte, etwa 90 Tage durchsuchbare Alarme</td></tr>
+          <tr><td>Verteilt</td><td colspan="2">je Rolle eigene Maschine</td><td>darüber hinaus, mit Indexer-Cluster</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="hinweis">
+      <p>Das Minimum ist wörtlich gemeint. Mit 4 GB läuft Wazuh, aber der Java-Heap des Indexers schwankt unter Last spürbar — auf einer Maschine, die nebenbei noch etwas anderes bedient, ist der OOM-Killer eine Frage der Zeit. Für eine Demo reicht es, für Produktion nicht.</p>
+      <p>Der Plattenbedarf richtet sich nach der Aufbewahrungsdauer, nicht nach der Zahl der Agenten. Vor dem Rollout die Index-Lebenszyklen festlegen, sonst füllt sich die Platte und der Indexer schaltet die Indizes schreibgeschützt.</p>
+    </div>
+
+    <h3 style="margin-top:34px">Wichtige Pfade</h3>
+    <div class="tabelle">
+      <table>
+        <thead><tr><th>Pfad</th><th>Inhalt</th></tr></thead>
+        <tbody>
+          <tr><td class="pfad">/var/ossec/etc/ossec.conf</td><td>Hauptkonfiguration von Manager und Agent</td></tr>
+          <tr><td class="pfad">/var/ossec/etc/rules/local_rules.xml</td><td>Eigene Regeln, updatefest</td></tr>
+          <tr><td class="pfad">/var/ossec/etc/decoders/local_decoder.xml</td><td>Eigene Decoder für unbekannte Logformate</td></tr>
+          <tr><td class="pfad">/var/ossec/logs/alerts/alerts.json</td><td>Alarme als JSON — die Quelle für Filebeat</td></tr>
+          <tr><td class="pfad">/var/ossec/logs/ossec.log</td><td>Betriebslog der Dienste, erste Anlaufstelle bei Störungen</td></tr>
+          <tr><td class="pfad">/var/ossec/bin/wazuh-logtest</td><td>Regeln und Decoder gegen eine Logzeile prüfen</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="abwaegung">
+    <p class="kicker">07 — Einordnung</p>
+    <h2>Wofür es taugt, wofür nicht</h2>
+    <div class="abwaegung">
+      <div>
+        <h3>Spricht dafür</h3>
+        <ul>
+          <li>Voller Funktionsumfang unter GPLv2 — keine Funktion hinter einer Enterprise-Schranke, anders als bei Splunk oder der Security-Variante von Elastic.</li>
+          <li>Kosten wachsen mit Hardware und Aufbewahrungsdauer, nicht mit dem Datenvolumen pro Tag.</li>
+          <li>SIEM, FIM, Schwachstellenerkennung und Härtungsprüfung aus einer Installation statt aus vier Werkzeugen.</li>
+          <li>Agent läuft auch auf älteren Systemen, die moderne EDR-Produkte nicht mehr unterstützen.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Spricht dagegen</h3>
+        <ul>
+          <li>Der mitgelieferte Regelsatz erzeugt anfangs viele Fehlalarme. Ohne Tuning über mehrere Wochen wird das Dashboard ignoriert.</li>
+          <li>Der Indexer will RAM und Pflege — Index-Lebenszyklen, Snapshots, Plattenüberwachung liegen beim Betreiber.</li>
+          <li>Kein Ersatz für ein EDR mit Verhaltensblockade: Wazuh erkennt und reagiert per Skript, verhindert aber nicht im Kernel.</li>
+          <li>Ohne jemanden, der die Alarme tatsächlich liest, entsteht nur ein teurer Logspeicher.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer class="fuss">
+  <p>Technische Übersicht für Administratoren · Stand September 2026 · Versionslinie 4.14</p>
+  <p>Wazuh ist ein Produkt der Wazuh Inc. Diese Seite ist eine unabhängige Erklärhilfe von CYQORE und keine offizielle Dokumentation.</p>
+</footer>
