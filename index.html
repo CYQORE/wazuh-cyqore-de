@@ -239,6 +239,60 @@ code{font-family:var(--m); font-size:.88em; color:var(--primary); background:var
 /* ---------- Diagramm ---------- */
 .chart{width:100%; height:auto; display:block}
 
+
+/* ---------- Live-Betrieb: animierter Datenweg ---------- */
+#geruest{scroll-margin-top:calc(49px + env(safe-area-inset-top,0px))}
+.sim-steuer{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:10px}
+.sim-steuer label{font-size:11.5px; color:var(--muted); display:flex; align-items:center; gap:6px}
+.sim-steuer select,.sim-steuer button{
+  font-family:inherit; font-size:12.5px; border:1px solid var(--line); background:var(--panel);
+  color:var(--text); border-radius:4px; padding:6px 10px; max-width:100%;
+}
+.sim-steuer button{cursor:pointer; font-weight:500}
+.sim-steuer button:hover{border-color:var(--primary); color:var(--primary)}
+.sim-steuer button.primaer{background:var(--primary); border-color:var(--primary); color:#fff; font-weight:600; min-width:74px}
+.sim-steuer button.primaer:hover{background:#005A99; color:#fff}
+.sim-kpi{display:flex; gap:16px; flex-wrap:wrap; font-size:12px; color:var(--muted); margin-bottom:6px}
+.sim-kpi b{font-family:var(--m); color:var(--head); font-size:13px; font-variant-numeric:tabular-nums}
+.sim-svg{width:100%; height:auto; display:block; min-width:600px}
+.sim-svg-wrap{overflow-x:auto}
+.sim-knoten rect{fill:#FFFFFF; stroke:#D3DAE6; stroke-width:1.2; transition:stroke .25s ease, fill .25s ease}
+.sim-knoten text.t{transition:fill .25s ease}
+.sim-knoten.aktiv rect{stroke:#006BB4; stroke-width:2; fill:#E6F1FA}
+.sim-knoten.aktiv text.t{fill:#006BB4}
+#sim-paket{transition:opacity .3s ease}
+#sim-paket circle{filter:drop-shadow(0 0 5px rgba(0,107,180,.55))}
+.sim-unten{display:grid; grid-template-columns:minmax(0,3fr) minmax(0,2fr); gap:14px}
+@media (max-width:820px){.sim-unten{grid-template-columns:1fr}}
+.sim-schritte{display:flex; gap:4px; margin-bottom:12px; flex-wrap:wrap}
+.sim-schritte span{font-size:10.5px; padding:3px 8px; border-radius:3px; background:#EEF1F6; color:var(--muted); white-space:nowrap}
+.sim-schritte span.aktiv{background:var(--primary); color:#fff; font-weight:600}
+.sim-schritte span.fertig{background:#E4F3EC; color:#2F6B53}
+.sim-erkl h4{font-size:14.5px; margin-bottom:8px; color:var(--head)}
+.sim-erkl p{font-size:13px; margin:0 0 9px; max-width:none}
+.sim-erkl p:last-child{margin-bottom:0}
+.sim-erkl pre{margin:0 0 9px; white-space:pre-wrap; word-break:break-word}
+.sim-erkl dl.felder{margin-bottom:9px}
+.sim-erkl .treffer{margin-top:4px}
+.sim-ticker{
+  font-family:var(--m); font-size:11px; background:#1A1C21; color:#C8CCD4; border-radius:5px;
+  padding:9px 11px; min-height:236px; overflow:hidden; line-height:1.5;
+}
+.sim-ticker div{
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:2px 0;
+  border-bottom:1px solid rgba(255,255,255,.05); animation:sim-ein .35s ease;
+}
+.sim-ticker div:last-child{border-bottom:0}
+.sim-ticker i{color:#6F7785; font-style:normal}
+.sim-ticker div.leise{color:#6F7785}
+.sim-ticker div.alarm{color:#FFB199}
+.sim-ticker div.alarm.hoch{color:#FF7A5C; font-weight:600}
+@keyframes sim-ein{from{opacity:0; transform:translateY(-4px)} to{opacity:1; transform:none}}
+@media (prefers-reduced-motion:reduce){
+  .sim-ticker div{animation:none}
+  #sim-paket,.sim-knoten rect,.sim-knoten text.t{transition:none}
+}
+
 /* ---------- Tooltip ---------- */
 #tip{
   position:fixed; z-index:100; max-width:290px; background:#1A1C21; color:#F2F4F7;
@@ -329,6 +383,7 @@ code{font-family:var(--m); font-size:.88em; color:var(--primary); background:var
     </div>
 
     <a class="sprung" href="#geruest">Zum Nachbau des Dashboards ↓</a>
+    <a class="sprung" href="#geruest" data-go="live" style="margin-left:8px">Live-Betrieb ansehen ›</a>
   </div>
 </section>
 
@@ -469,6 +524,8 @@ var M = [
   tip:'Die Modulübersicht — Ausgangspunkt für alles Weitere. Im echten Dashboard erreichst du sie über das Hamburger-Menü links oben.'},
  {id:'architektur', g:'basis', n:'Architektur', kurz:'Agent, Manager, Indexer, Dashboard und der Weg der Daten.',
   tip:'Woraus Wazuh besteht und wie ein Ereignis vom Endpunkt bis ins Dashboard wandert.'},
+ {id:'live', g:'basis', n:'Live-Betrieb', kurz:'Animation: der Weg eines Ereignisses durch Wazuh.',
+  tip:'Zeigt Schritt für Schritt, was im laufenden Betrieb passiert: vom Logeintrag auf dem Endpunkt über Decoder und Regeln bis zum Alarm im Dashboard und zur Reaktion. Vier Szenarien, dazu der Ereignisstrom, wie ihn der Manager sieht.'},
  {id:'ports', g:'basis', n:'Ports & Datenwege', kurz:'Vorlage für die Firewall-Regeln.',
   tip:'Welcher Dienst auf welchem Port spricht und in welche Richtung die Verbindung aufgebaut wird.'},
  {id:'regeln', g:'basis', n:'Regeln & Decoder', kurz:'Wie aus einer Logzeile ein Alarm wird.',
@@ -939,6 +996,266 @@ pcidss:function(){
 }
 };
 
+/* ---------- Live-Betrieb: ein Ereignis auf dem Weg durch Wazuh ---------- */
+var NACH = {};            /* Initialisierung nach dem Rendern einer Ansicht */
+var aktivStop = null;     /* Aufräumfunktion der gerade offenen Ansicht */
+var reduziert = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+function indexSchritt(){
+  return {t:'Alarm wird gespeichert', paket:'JSON → 9200',
+    h:'<p>Der Alarm wird als JSON an <code>/var/ossec/logs/alerts/alerts.json</code> angehängt. Filebeat liest die Datei fortlaufend und schreibt den Eintrag per TLS auf Port 9200 in den Tagesindex <code>wazuh-alerts-4.x-2026.09.21</code>. Ab jetzt ist er durchsuchbar — und bleibt es so lange, wie der Index-Lebenszyklus es vorsieht.</p>'};
+}
+
+var SZENARIEN = [
+ {name:'SSH-Brute-Force auf srv-web-01', agent:'srv-web-01', ar:true, ip:'45.148.10.92',
+  ticker:{zeile:'srv-web-01  sshd     Stufe 10  100001 SSH: mehrfach fehlgeschlagene Anmeldung (45.148.10.92)', klasse:'alarm hoch'},
+  schritte:[
+   {t:'Ereignis entsteht auf dem Endpunkt', paket:'Logzeile',
+    h:'<p><code>sshd</code> schreibt nach <code>/var/log/auth.log</code>:</p><pre>Sep 21 07:42:11 srv-web-01 sshd[28714]: Failed password for invalid user admin from 45.148.10.92 port 51234 ssh2</pre><p>Die dritte fehlgeschlagene Anmeldung von derselben Adresse innerhalb einer Minute. Auf dem Server selbst merkt das niemand.</p>'},
+   {t:'Agent liest und sendet', paket:'AES-256 → 1514',
+    h:'<p><code>wazuh-logcollector</code> liest die neue Zeile, <code>wazuh-agentd</code> verschlüsselt sie mit AES-256 und schickt sie über die bestehende Verbindung auf Port 1514/TCP an den Manager. Der Endpunkt bewertet nichts — er transportiert nur. Das hält den Agenten leicht.</p>'},
+   {t:'Decoder zerlegt die Zeile', paket:'Felder',
+    h:'<p><code>wazuh-analysisd</code> erkennt am Muster den Decoder <code>sshd</code> und zieht Felder heraus:</p><dl class="felder"><dt>program_name</dt><dd>sshd</dd><dt>srcuser</dt><dd>admin</dd><dt>srcip</dt><dd>45.148.10.92</dd><dt>srcport</dt><dd>51234</dd></dl><p>Erst mit diesen Feldern kann eine Regel etwas vergleichen.</p>'},
+   {t:'Regeln bewerten das Ereignis', paket:'Alarm · Stufe 10',
+    h:'<p>Regel <code>5760</code> (Stufe 5, authentication failed) trifft. Weil es der dritte Treffer derselben <code>srcip</code> innerhalb von 60 Sekunden ist, greift zusätzlich die eigene Regel <code>100001</code>.</p><div class="treffer"><b>100001 — Stufe 10</b><span>SSH: mehrfach fehlgeschlagene Anmeldung. Gruppe <code>local,syslog,sshd</code>, MITRE T1110 Brute Force. Mit <code>firewall-drop</code> als Active Response verknüpft.</span></div>'},
+   indexSchritt(),
+   {t:'Sichtbar im Dashboard', paket:'Alarm',
+    h:'<p>Unter Threat Hunting erscheint der Alarm mit allen Feldern. Ein Filter auf <code>data.srcip: 45.148.10.92</code> zeigt jetzt jeden weiteren Kontakt dieser Adresse — auch auf anderen Agenten, etwa die 404-Serie auf dem Webserver um 04:28.</p>'},
+   {t:'Active Response sperrt die Quelle', paket:'firewall-drop',
+    h:'<p>Weil Regel 100001 mit <code>firewall-drop</code> verknüpft ist, schickt der Manager einen Befehl zurück an den Agenten. <code>wazuh-execd</code> setzt dort eine iptables-Regel: 45.148.10.92 ist für 600 Sekunden gesperrt, danach wird die Regel automatisch wieder entfernt.</p><p>Zwischen der Logzeile und der Sperre liegen im echten Betrieb ein bis zwei Sekunden.</p>'}
+  ]},
+
+ {name:'Webshell im Webverzeichnis', agent:'srv-web-01', ar:false,
+  ticker:{zeile:'srv-web-01  syscheck Stufe 12  100010 Neue PHP-Datei im Webverzeichnis: /var/www/html/.cache.php (www-data)', klasse:'alarm hoch'},
+  schritte:[
+   {t:'Neue Datei im Webverzeichnis', paket:'Dateiänderung',
+    h:'<p>Über eine Schwachstelle im Upload-Formular legt ein Angreifer eine Datei ab:</p><pre>/var/www/html/.cache.php\nEigentümer: www-data · 2,1 KB</pre><p>Auf dem Endpunkt selbst fällt das niemandem auf — ein Webserver schreibt ständig Dateien.</p>'},
+   {t:'syscheckd meldet in Echtzeit', paket:'FIM-Ereignis',
+    h:'<p>Das Verzeichnis ist mit <code>realtime="yes"</code> und <code>whodata="yes"</code> überwacht. <code>wazuh-syscheckd</code> meldet sofort: neue Datei, Prüfsumme, Benutzer <code>www-data</code>, Prozess <code>php-fpm</code>. Ohne Echtzeitmodus käme die Meldung erst beim nächsten Intervall-Lauf — Stunden später.</p>'},
+   {t:'Decoder syscheck', paket:'Felder',
+    h:'<p>Der Decoder <code>syscheck</code> zerlegt das Ereignis:</p><dl class="felder"><dt>syscheck.path</dt><dd>/var/www/html/.cache.php</dd><dt>syscheck.event</dt><dd>added</dd><dt>syscheck.uname_after</dt><dd>www-data</dd><dt>syscheck.process_name</dt><dd>/usr/sbin/php-fpm8.2</dd></dl>'},
+   {t:'Regeln bewerten das Ereignis', paket:'Alarm · Stufe 12',
+    h:'<p>Regel <code>554</code> (Stufe 3, File added) trifft — allein noch unauffällig. Eine eigene Regel <code>100010</code> hebt auf Stufe 12, wenn unter <code>/var/www</code> eine <code>.php</code> vom Webserver-Benutzer selbst angelegt wird. Parallel prüft die YARA-Integration die Datei und trifft auf <code>webshell_php_generic</code>.</p><div class="treffer"><b>100010 — Stufe 12</b><span>Neue PHP-Datei im Webverzeichnis, angelegt von www-data. MITRE T1505.003 Web Shell.</span></div>'},
+   indexSchritt(),
+   {t:'Sichtbar im Dashboard', paket:'Alarm',
+    h:'<p>Im Modul File Integrity Monitoring steht die Datei mit Benutzer und Prozess, unter Malware Detection der YARA-Treffer. Beide Alarme tragen dieselbe Agent-ID und denselben Pfad — im Dashboard eine Zeile untereinander.</p>'},
+   {t:'Benachrichtigung statt Sperre', paket:'E-Mail · Slack',
+    h:'<p>Für diesen Fall ist keine Active Response konfiguriert — eine Datei automatisch zu löschen wäre riskant. Stattdessen schickt <code>wazuh-integratord</code> den Alarm ab Stufe 12 an Slack und per E-Mail.</p><p>Der Rest ist Handarbeit: Datei sichern, Upload-Formular schließen, Webserver-Logs der letzten Stunde durchsehen.</p>'}
+  ]},
+
+ {name:'Verwundbares Paket auf srv-db-02', agent:'srv-db-02', ar:false,
+  ticker:{zeile:'srv-db-02   vulnerability-detector  Stufe 10  CVE-2024-6387 affects openssh-server 1:9.2p1-2', klasse:'alarm hoch'},
+  schritte:[
+   {t:'Ein Paket wird installiert', paket:'Inventaränderung',
+    h:'<p>Ein Administrator spielt OpenSSH aus einem Drittquellen-Repository ein:</p><pre>apt install openssh-server=1:9.2p1-2</pre><p>Die Version ist bekannt verwundbar (CVE-2024-6387, „regreSSHion") — das weiß der Administrator in diesem Moment nicht.</p>'},
+   {t:'syscollector meldet das Inventar', paket:'Paketliste',
+    h:'<p>Beim nächsten Lauf sammelt <code>syscollector</code> die Paketliste ein und schickt nur die Differenz zum letzten Stand: ein Paket, neue Version. Kein Scan über das Netz, kein Login auf dem Server — der Agent weiß es einfach.</p>'},
+   {t:'Kein Decoder — Inventar geht in die Datenbank', paket:'wazuh-db',
+    h:'<p>Inventardaten laufen nicht durch Decoder. <code>wazuh-db</code> schreibt sie in die Agentendatenbank, wo jetzt steht:</p><dl class="felder"><dt>package.name</dt><dd>openssh-server</dd><dt>package.version</dt><dd>1:9.2p1-2</dd><dt>package.architecture</dt><dd>amd64</dd></dl>'},
+   {t:'Vulnerability Detection gleicht ab', paket:'CVE-Treffer',
+    h:'<p>Der Vulnerability-Detector vergleicht Name und Version mit dem CVE-Feed (NVD und Debian-Tracker über die Wazuh-CTI-Plattform). Treffer: CVE-2024-6387, CVSS 8.1, behoben ab <code>1:9.2p1-2+deb12u3</code>.</p><div class="treffer"><b>vulnerability-detector — Stufe 10 (High)</b><span>CVE-2024-6387 affects openssh-server. Der Alarm nennt Paket, installierte und behebende Version.</span></div>'},
+   indexSchritt(),
+   {t:'Sichtbar im Dashboard', paket:'Alarm',
+    h:'<p>Unter Vulnerability Detection steht die Lücke mit Paket, installierter und behebender Version. Ein Filter auf die CVE zeigt sofort, welche weiteren Endpunkte dasselbe Paket tragen — die Frage, für die man sonst über alle Server läuft.</p>'},
+   {t:'Meldung an das Patch-Team', paket:'Ticket',
+    h:'<p>Keine automatische Reaktion — ein Paket kann Wazuh nicht sicher aktualisieren. Der Alarm geht per Integration ans Ticketsystem.</p><p>Sobald das Paket aktualisiert ist, meldet der nächste syscollector-Lauf die neue Version, und Wazuh markiert den Fund von selbst als behoben.</p>'}
+  ]},
+
+ {name:'Agent srv-mail-01 verstummt', agent:'srv-mail-01', ar:false,
+  ticker:{zeile:'wazuh-manager  ossec    Stufe 3   504 Wazuh agent disconnected: srv-mail-01 (004)', klasse:'alarm'},
+  schritte:[
+   {t:'Ein Server verstummt', paket:'kein Keepalive',
+    h:'<p><code>srv-mail-01</code> sendet plötzlich nichts mehr. Ursache offen: Stromausfall, Netzwerkproblem — oder jemand hat den Agenten gestoppt, um unbeobachtet zu arbeiten.</p>'},
+   {t:'Der Agent meldet sich nicht', paket:'Timeout',
+    h:'<p>Normalerweise schickt <code>wazuh-agentd</code> alle 10 Sekunden ein Keepalive. Bleibt es aus, wartet der Manager die konfigurierte Frist (<code>agents_disconnection_time</code>, Standard 10 Minuten) und setzt den Agenten dann auf „getrennt".</p>'},
+   {t:'Kein Decoder nötig', paket:'internes Ereignis',
+    h:'<p>Das Ereignis entsteht im Manager selbst: <code>wazuh-remoted</code> erzeugt eine interne Meldung mit Agent-ID, Name und letztem Kontakt. Sie nimmt denselben Weg wie jedes andere Ereignis.</p><dl class="felder"><dt>agent.id</dt><dd>004</dd><dt>agent.name</dt><dd>srv-mail-01</dd><dt>last_keepalive</dt><dd>07:31:58</dd></dl>'},
+   {t:'Regel 504 trifft', paket:'Alarm · Stufe 3',
+    h:'<p>Regel <code>504</code> (Stufe 3, „Wazuh agent disconnected") trifft. Stufe 3 ist niedrig — für einen Mailserver, der nie ausfallen darf, lohnt es sich, die Stufe in <code>local_rules.xml</code> anzuheben, damit jemand benachrichtigt wird.</p><div class="treffer"><b>504 — Stufe 3</b><span>Wazuh agent disconnected. Gruppe <code>ossec</code>.</span></div>'},
+   indexSchritt(),
+   {t:'Sichtbar im Dashboard', paket:'Alarm',
+    h:'<p>Im Modul Agents wechselt der Status auf „getrennt", mit Zeitpunkt des letzten Kontakts. In Threat Hunting steht der Alarm. Ohne Blick ins Dashboard fällt es niemandem auf — deshalb der nächste Schritt.</p>'},
+   {t:'Benachrichtigung', paket:'E-Mail · Slack',
+    h:'<p>Mit angehobener Stufe geht die Meldung per Integration raus. Wer sie liest, prüft zuerst, ob der Server erreichbar ist — und dann, ob der Agent absichtlich gestoppt wurde: <code>journalctl -u wazuh-agent</code> auf dem Endpunkt zeigt, wer und wann.</p>'}
+  ]}
+];
+
+var SIM_STUFEN = ['Endpunkt','Agent','Decoder','Regeln','Indexer','Dashboard','Reaktion'];
+var SIM_LEN    = [0,150,330,440,610,760];
+var SIM_KNOTEN = ['endpunkt','agent','decoder','regeln','indexer','dashboard'];
+var SIM_POOL = [
+  'srv-db-02   syslog   Stufe 2   systemd: Started Session {n} of user backup',
+  'ws-buchhaltung-07  windows  Stufe 3   4624 Logon success: jhoffmann',
+  'fw-edge-01  syslog   Stufe 3   pf: pass in on em0 10.20.4.37 → 142.250.185.78:443',
+  'srv-web-01  apache   Stufe 0   GET /index.html 200 → verworfen',
+  'srv-mail-01 postfix  Stufe 2   connect from mail-ej1-f52.google.com',
+  'srv-db-02   sudo     Stufe 3   5402 jhoffmann : USER=root ; COMMAND=/usr/bin/systemctl status postgresql',
+  'srv-web-01  syscheck Stufe 0   /var/log/nginx/access.log geändert → ignoriert',
+  'ws-buchhaltung-07  windows  Stufe 3   4688 Prozess erstellt: OUTLOOK.EXE',
+  'srv-db-02   syslog   Stufe 2   cron: (root) CMD (run-parts /etc/cron.hourly)',
+  'fw-edge-01  syslog   Stufe 0   pf: block in on em0 198.51.100.7 → :23 → verworfen',
+  'srv-web-01  apache   Stufe 3   31100 GET /wp-login.php 404'
+];
+
+function simSvg(){
+  function knoten(id,cx,cy,w,h,t,u){
+    return '<g class="sim-knoten" id="sk-'+id+'"><rect x="'+(cx-w/2)+'" y="'+(cy-h/2)+'" width="'+w+'" height="'+h+'" rx="6"></rect>'+
+      '<text class="t" x="'+cx+'" y="'+(cy+(u?-1:4))+'" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1A1C21">'+t+'</text>'+
+      (u?'<text x="'+cx+'" y="'+(cy+13)+'" text-anchor="middle" font-size="10" fill="#69707D" font-family="ui-monospace,Menlo,monospace">'+u+'</text>':'')+'</g>';
+  }
+  function port(x,y,t){ return '<text x="'+x+'" y="'+y+'" text-anchor="middle" font-size="10" fill="#69707D" font-family="ui-monospace,Menlo,monospace">'+t+'</text>'; }
+  return '<div class="sim-svg-wrap"><svg class="sim-svg" viewBox="0 0 900 248" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" role="img" aria-label="Animierter Weg eines Ereignisses vom Endpunkt bis zur Reaktion">'+
+    '<defs><marker id="sp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#98A2B3"></path></marker></defs>'+
+    '<rect x="340" y="62" width="230" height="88" rx="8" fill="#F4F8FC" stroke="#006BB4" stroke-dasharray="3 3"></rect>'+
+    '<text x="455" y="76" text-anchor="middle" font-size="10" font-weight="700" fill="#006BB4" letter-spacing="1.4">WAZUH-MANAGER</text>'+
+    '<path id="sim-pfad" d="M70 105 L220 105 L400 105 L510 105 L680 105 L830 105" fill="none" stroke="#C9D1DC" stroke-width="2"></path>'+
+    '<path id="sim-pfad-ar" d="M510 128 C510 218, 70 218, 70 128" fill="none" stroke="#C9D1DC" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#sp)"></path>'+
+    '<path id="sim-pfad-nb" d="M830 128 L830 181" fill="none" stroke="#C9D1DC" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#sp)"></path>'+
+    port(145,176,'1514 · AES-256')+port(595,176,'Filebeat · 9200')+port(755,176,'Suche · 9200')+
+    '<text x="290" y="236" text-anchor="middle" font-size="10" fill="#69707D">Active Response — Befehl zurück an den Agenten</text>'+
+    knoten('endpunkt',70,105,96,46,'Endpunkt','wazuh-agent')+
+    knoten('agent',220,105,96,46,'Agent','logcollector')+
+    knoten('decoder',400,105,92,44,'Decoder','analysisd')+
+    knoten('regeln',510,105,92,44,'Regeln','analysisd')+
+    knoten('indexer',680,105,96,46,'Indexer','OpenSearch')+
+    knoten('dashboard',830,105,96,46,'Dashboard','Browser')+
+    knoten('nb',830,205,112,40,'Benachrichtigung','integratord')+
+    '<g id="sim-paket" opacity="0"><circle r="7" fill="#006BB4" stroke="#fff" stroke-width="2"></circle><g transform="translate(0,34)"><rect id="sim-paket-r" x="-40" y="-11" width="80" height="16" rx="8" fill="#FFFFFF" stroke="#006BB4" stroke-width="1"></rect><text id="sim-paket-t" y="1" text-anchor="middle" font-size="10" font-weight="600" fill="#006BB4"></text></g></g>'+
+  '</svg></div>';
+}
+
+ANSICHT.live = function(){
+  return '<div class="panel">'+
+    '<div class="sim-steuer">'+
+      '<label for="sim-sz">Szenario</label><select id="sim-sz">'+SZENARIEN.map(function(s,i){ return '<option value="'+i+'">'+s.name+'</option>'; }).join('')+'</select>'+
+      '<button type="button" id="sim-start" class="primaer">Pause</button>'+
+      '<button type="button" id="sim-schritt">Schritt ›</button>'+
+      '<button type="button" id="sim-neu">Von vorn</button>'+
+      '<label for="sim-tempo">Tempo</label><select id="sim-tempo"><option value="0.5">langsam</option><option value="1" selected>normal</option><option value="2">schnell</option></select>'+
+    '</div>'+
+    '<div class="sim-kpi"><span>Ereignisse/s <b id="sim-eps">47</b></span><span>Alarme heute <b id="sim-alarme">975</b></span><span>Agenten aktiv <b>44</b></span><span>Warteschlange analysisd <b id="sim-queue">0,3 %</b></span></div>'+
+    simSvg()+
+    '<p style="margin:10px 0 0;font-size:12.5px;color:var(--muted)">Der Punkt ist das Ereignis. Läuft die Animation, wechselt sie alle paar Sekunden zur nächsten Station; mit „Schritt" geht es von Hand weiter. Nach der letzten Station beginnt das Szenario von vorn'+(reduziert?' — auf diesem Gerät ist Bewegung reduziert, die Animation startet deshalb erst per Klick.':'.')+'</p>'+
+  '</div>'+
+  '<div class="sim-unten">'+
+    '<div class="panel sim-erkl"><div class="sim-schritte" id="sim-schritte"></div><h4 id="sim-titel"></h4><div id="sim-text"></div></div>'+
+    '<div class="panel"><h3>Ereignisstrom am Manager <span style="font-weight:400;color:var(--muted)">remoted → analysisd</span></h3><div class="sim-ticker" id="sim-ticker" aria-live="off"></div>'+
+    '<p style="font-size:11.5px;color:var(--muted);margin:10px 0 0">Alles, was hier ankommt, durchläuft Decoder und Regeln. Stufe 0 wird verworfen und erzeugt keinen Alarm — der übliche Weg, Rauschen abzuschalten. Alles ab Stufe 3 landet im Indexer.</p></div>'+
+  '</div>';
+};
+
+NACH.live = function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var pfad=$('sim-pfad'), pfadAR=$('sim-pfad-ar'), pfadNB=$('sim-pfad-nb'),
+      paket=$('sim-paket'), paketT=$('sim-paket-t'), paketR=$('sim-paket-r'), titel=$('sim-titel'), text=$('sim-text'),
+      schritte=$('sim-schritte'), ticker=$('sim-ticker'), eps=$('sim-eps'), alarme=$('sim-alarme'),
+      queue=$('sim-queue'), selSz=$('sim-sz'), selTempo=$('sim-tempo'),
+      bStart=$('sim-start'), bSchritt=$('sim-schritt'), bNeu=$('sim-neu');
+  if(!pfad) return null;
+
+  var S = {sz:SZENARIEN[0], stufe:-1, laufend:!reduziert, tempo:1, timer:null, raf:null,
+           alarme:975, sek:7*3600+41*60+20, n:4821};
+  var tick=null, kpi=null;
+
+  function setzePaket(p){ paket.setAttribute('transform','translate('+p.x.toFixed(1)+','+p.y.toFixed(1)+')'); paket.setAttribute('opacity','1'); }
+  function markiere(stufe){
+    SIM_KNOTEN.concat(['nb']).forEach(function(k){ var g=$('sk-'+k); if(g) g.classList.remove('aktiv'); });
+    if(stufe>=0){
+      var k = stufe<6 ? SIM_KNOTEN[stufe] : (S.sz.ar ? 'endpunkt' : 'nb');
+      var g=$('sk-'+k); if(g) g.classList.add('aktiv');
+    }
+    schritte.innerHTML = SIM_STUFEN.map(function(n,i){
+      return '<span class="'+(i===stufe?'aktiv':(stufe>=0&&i<stufe)?'fertig':'')+'">'+(i+1)+' '+n+'</span>';
+    }).join('');
+  }
+  function zeit(){
+    S.sek += 1+Math.floor(Math.random()*3);
+    var h=Math.floor(S.sek/3600)%24, m=Math.floor(S.sek/60)%60, s=S.sek%60;
+    return [h,m,s].map(function(x){ return (x<10?'0':'')+x; }).join(':');
+  }
+  function tickerZeile(txt, klasse){
+    var d=document.createElement('div'); if(klasse) d.className=klasse;
+    d.innerHTML='<i>'+zeit()+'</i>  '+txt;
+    ticker.insertBefore(d, ticker.firstChild);
+    while(ticker.children.length>10) ticker.removeChild(ticker.lastChild);
+  }
+  function rauschen(){
+    var z=SIM_POOL[Math.floor(Math.random()*SIM_POOL.length)].replace('{n}', ++S.n);
+    tickerZeile(z, z.indexOf('Stufe 0')>-1 ? 'leise' : '');
+  }
+  function zeige(stufe){
+    var s=S.sz.schritte[stufe];
+    titel.textContent=(stufe+1)+' · '+s.t; text.innerHTML=s.h;
+    if(stufe===3) tickerZeile(S.sz.ticker.zeile, S.sz.ticker.klasse);
+    if(stufe===6 && S.sz.ar) tickerZeile(S.sz.agent+'  execd    Stufe 3   Active Response firewall-drop: '+S.sz.ip+' gesperrt (600 s)', 'alarm');
+  }
+  function tween(p, von, nach, dauer, fertig){
+    if(S.raf){ cancelAnimationFrame(S.raf); S.raf=null; }
+    if(reduziert || dauer<=0){ setzePaket(p.getPointAtLength(nach)); fertig(); return; }
+    var t0=performance.now();
+    S.raf=requestAnimationFrame(function schritt(now){
+      var t=Math.min(1,(now-t0)/dauer), e = t<.5 ? 2*t*t : -1+(4-2*t)*t;
+      setzePaket(p.getPointAtLength(von+(nach-von)*e));
+      if(t<1) S.raf=requestAnimationFrame(schritt); else { S.raf=null; fertig(); }
+    });
+  }
+  function geheZu(stufe){
+    clearTimeout(S.timer);
+    var s=S.sz.schritte[stufe]; paketT.textContent=s.paket;
+    try{ var bw=paketT.getComputedTextLength()+16; paketR.setAttribute('width',bw); paketR.setAttribute('x',-bw/2); }catch(e){}
+    var reise=900/S.tempo;
+    var fertig=function(){
+      S.stufe=stufe; markiere(stufe); zeige(stufe);
+      if(S.laufend) S.timer=setTimeout(weiter, 2400/S.tempo);
+    };
+    if(stufe===0){ tween(pfad,0,0,0,fertig); }
+    else if(stufe<6){ tween(pfad,SIM_LEN[stufe-1],SIM_LEN[stufe],reise,fertig); }
+    else { var p6=S.sz.ar?pfadAR:pfadNB; setzePaket(p6.getPointAtLength(0)); tween(p6,0,p6.getTotalLength(),reise*1.4,fertig); }
+  }
+  function weiter(){
+    if(S.stufe>=6){
+      S.alarme++; alarme.textContent=S.alarme.toLocaleString('de-DE');
+      paket.setAttribute('opacity','0'); markiere(-1);
+      if(S.laufend) S.timer=setTimeout(function(){ geheZu(0); }, 1400/S.tempo); else geheZu(0);
+      return;
+    }
+    geheZu(S.stufe+1);
+  }
+  function knopf(){ bStart.textContent = S.laufend ? 'Pause' : 'Start'; }
+  function neu(){
+    clearTimeout(S.timer); if(S.raf){ cancelAnimationFrame(S.raf); S.raf=null; }
+    S.stufe=-1; paket.setAttribute('opacity','0'); markiere(-1); geheZu(0);
+  }
+
+  bStart.addEventListener('click', function(){
+    S.laufend=!S.laufend; knopf();
+    if(S.laufend){ if(S.stufe<0) geheZu(0); else S.timer=setTimeout(weiter, 900/S.tempo); }
+    else clearTimeout(S.timer);
+  });
+  bSchritt.addEventListener('click', function(){ S.laufend=false; knopf(); clearTimeout(S.timer); weiter(); });
+  bNeu.addEventListener('click', neu);
+  selSz.addEventListener('change', function(){ S.sz=SZENARIEN[+selSz.value]||SZENARIEN[0]; neu(); });
+  selTempo.addEventListener('change', function(){ S.tempo=+selTempo.value||1; });
+  function sicht(){ if(document.hidden && S.laufend){ S.laufend=false; clearTimeout(S.timer); knopf(); } }
+  document.addEventListener('visibilitychange', sicht);
+
+  for(var i=0;i<6;i++) rauschen();
+  tick=setInterval(rauschen, reduziert?2400:850);
+  kpi=setInterval(function(){
+    eps.textContent=38+Math.floor(Math.random()*24);
+    queue.textContent=(0.1+Math.random()*0.8).toFixed(1).replace('.',',')+' %';
+  }, 1000);
+  alarme.textContent=S.alarme.toLocaleString('de-DE');
+  knopf(); markiere(-1); geheZu(0);
+
+  return function stop(){
+    clearTimeout(S.timer); if(S.raf) cancelAnimationFrame(S.raf);
+    clearInterval(tick); clearInterval(kpi);
+    document.removeEventListener('visibilitychange', sicht);
+  };
+};
+
+
 /* ---------- Steckbrief für Module ohne eigene Mock-Ansicht ---------- */
 function steckbrief(m){
   var s='<div class="panel"><h3>Was dieses Modul tut</h3><p>'+m.tip+'</p></div>';
@@ -974,6 +1291,7 @@ var seite=document.getElementById('seite'), haupt=document.getElementById('haupt
 /* ---------- Ansicht wechseln ---------- */
 function oeffne(id, fokus){
   var m=INDEX[id]; if(!m) return;
+  if(aktivStop){ try{ aktivStop(); }catch(e){} aktivStop=null; }
   var inhalt = ANSICHT[id] ? ANSICHT[id]() : steckbrief(m);
   var kopf = id==='uebersicht' ? '' :
     '<div class="titel">'+glyph(m.g)+'<div><h2>'+m.n+'</h2><p>'+m.tip+'</p></div></div>';
@@ -984,8 +1302,13 @@ function oeffne(id, fokus){
   });
   verstecke();
   zeilenVerdrahten();
+  if(NACH[id]) aktivStop = NACH[id]() || null;
   if(window.innerWidth<=900 && seite.hidden===false && fokus!=='start') schliesseSeite();
-  if(fokus==='klick'){ haupt.focus(); window.scrollTo({top:0,behavior:'instant'}); }
+  if(fokus==='klick'){
+    haupt.focus({preventScroll:true});
+    var ziel=document.getElementById('geruest');
+    if(ziel) ziel.scrollIntoView({block:'start', behavior: reduziert?'auto':'smooth'});
+  }
 }
 function zeilenVerdrahten(){
   var zeilen=Array.prototype.slice.call(haupt.querySelectorAll('tr[data-detail]'));

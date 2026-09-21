@@ -17,6 +17,12 @@ OpenSearch-Optik mit dunkler Kopfleiste, Seitenleiste und Modulkacheln.
 Bewusst *nicht* im CYQORE-Design: Administratoren sollen wiedererkennen, was
 sie später vor sich haben.
 
+Das Modul **Live-Betrieb** animiert den Weg eines Ereignisses durch die
+Pipeline — Endpunkt, Agent, Decoder, Regeln, Indexer, Dashboard, Reaktion —
+in vier Szenarien (SSH-Brute-Force, Webshell, verwundbares Paket, getrennter
+Agent), mit Schritt-für-Schritt-Erklärung und einem laufenden Ereignisstrom.
+Bei `prefers-reduced-motion` startet die Animation erst per Klick.
+
 Abgebildet sind alle Modulgruppen von Wazuh 4.14 — Endpoint Security, Threat
 Intelligence, Security Operations, Cloud Security und Verwaltung — dazu ein
 Abschnitt Grundlagen mit Architektur, Ports, Regeln und Betrieb. Jeder Eintrag
