@@ -12,13 +12,23 @@ kein Build, keine Abhängigkeiten.
 
 ## Gestaltung
 
-Die Seite nutzt die CYQORE-Tokens aus `cyqore_daily/web/style.css`:
-Akzent `#E7095B`, Grund `#000` mit Bordeaux-Verlauf `#2F0012`, Flächen `#141416`,
-Text `#F5F5F7`, Sekundärtext `#9CA0A8`.
+Die Seite bildet die **Wazuh-Oberfläche** nach — helles Dashboard in EUI-/
+OpenSearch-Optik mit dunkler Kopfleiste, Seitenleiste und Modulkacheln.
+Bewusst *nicht* im CYQORE-Design: Administratoren sollen wiedererkennen, was
+sie später vor sich haben.
 
-**Keine externen Aufrufe.** Schriften kommen aus dem System, die Wortmarke steckt
-als Data-URI in der Datei. Damit geht beim Aufruf kein Request an Dritte — relevant,
-weil die CYQORE-Datenschutzerklärung Google nur für den Mailversand nennt.
+Abgebildet sind alle Modulgruppen von Wazuh 4.14 — Endpoint Security, Threat
+Intelligence, Security Operations, Cloud Security und Verwaltung — dazu ein
+Abschnitt Grundlagen mit Architektur, Ports, Regeln und Betrieb. Jeder Eintrag
+in Seitenleiste und Kachelraster trägt einen Tooltip, der erklärt, was das
+Modul zeigt und tut.
+
+Ein dauerhaft sichtbares Band oben stellt klar: Nachbau zu Schulungszwecken,
+keine laufende Installation, keine Seite der Wazuh Inc. Kennzahlen sind
+erfunden, Modulnamen, Regel-IDs, Feldnamen und Konfigurationsblöcke nicht.
+
+**Keine externen Aufrufe.** Schriften kommen aus dem System, das gesamte
+Markup, CSS und JavaScript steht in der einen Datei.
 
 ## Veröffentlichen
 
