@@ -32,4 +32,4 @@ ausgestellt ist (dauert nach dem DNS-Eintrag einige Minuten).
 ## Pflege
 
 Die Versionsangaben (Versionslinie, Installationsbefehl, Hardwarebedarf) stehen im
-Fußbereich und in Abschnitt 06. Bei einem Wazuh-Hauptversionswechsel beide prüfen.
+Fußbereich und in Abschnitt 07. Bei einem Wazuh-Hauptversionswechsel beide prüfen.
