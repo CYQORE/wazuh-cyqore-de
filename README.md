@@ -12,8 +12,10 @@ kein Build, keine Abhängigkeiten.
 
 ## Gestaltung
 
-Die Seite bildet die **Wazuh-Oberfläche** nach — helles Dashboard in EUI-/
+Die Seite bildet die **Wazuh-Oberfläche** nach — Dashboard in EUI-/
 OpenSearch-Optik mit dunkler Kopfleiste, Seitenleiste und Modulkacheln.
+Hell und dunkel wie im echten Dashboard: folgt der Systemeinstellung, per
+Schalter in der Kopfleiste umstellbar; die Wahl bleibt im Browser gespeichert.
 Bewusst *nicht* im CYQORE-Design: Administratoren sollen wiedererkennen, was
 sie später vor sich haben.
 
