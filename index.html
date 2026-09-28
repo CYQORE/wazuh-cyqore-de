@@ -851,6 +851,8 @@ var M = [
   tip:'Von Active Response bis WPK: die Begriffe, die in Wazuh und auf dieser Seite vorkommen.'},
  {id:'vergleich', g:'werk', n:'Wazuh im Vergleich', kurz:'Splunk, Elastic Security, Sentinel.',
   tip:'Lizenz, Kosten, Umfang und Stärken im Vergleich zu Splunk Enterprise Security, Elastic Security und Microsoft Sentinel.'},
+ {id:'qonfirm', g:'werk', n:'Export nach QONFIRM', kurz:'Mängel und CVE als Audit-Befunde übergeben.',
+  tip:'Überträgt Schwachstellen, nicht bestandene Härtungsprüfungen und Malware-Funde als Audit-Befunde an QONFIRM, das Audit-Werkzeug von CYQORE — als JSON oder CSV, mit Prüfsumme je Befund.'},
  {id:'druck', g:'werk', n:'Handout drucken', kurz:'Kompakte Tabellen als PDF.',
   tip:'Ports, Pfade, Intervalle, Stufen und Befehle auf wenigen Seiten — zum Ausdrucken oder als PDF sichern.'}
 ];
@@ -865,6 +867,64 @@ var GRUPPEN = [
   {k:'werk',   t:'Lernen & Werkzeuge'}
 ];
 var INDEX={}; M.forEach(function(m){ INDEX[m.id]=m; });
+
+var CVE_FUNDE = [
+ {id:'CVE-2024-3094', name:'xz-Hintertür', paket:'xz-utils / liblzma5', inst:'5.6.1-1', fix:'5.6.1+really5.4.5-1', k:'s-krit', st:'Kritisch', cvss:'10.0', agent:'ws-dev-03', os:'Debian testing', kev:false,
+    was:'Absichtlich eingeschleuste Hintertür in den Release-Archiven von xz 5.6.0 und 5.6.1. Über <code>liblzma</code>, das auf manchen Distributionen per systemd in <code>sshd</code> geladen wird, konnte der Angreifer vor der Anmeldung Code ausführen. Betroffen waren vor allem Test- und Rolling-Distributionen wie Debian testing/unstable, Fedora Rawhide und openSUSE Tumbleweed.',
+    vektor:'Netzwerk, ohne Anmeldung — nur mit dem privaten Schlüssel des Angreifers',
+    m:[['Sofort','Version prüfen: <code>xz --version</code>. War <code>sshd</code> aus dem Internet erreichbar, das System als möglicherweise kompromittiert behandeln.'],
+       ['Beheben','<code>apt update &amp;&amp; apt install --only-upgrade xz-utils liblzma5</code> — Debian liefert unter der Versionsnummer <code>5.6.1+really5.4.5</code> den sauberen Stand 5.4.5 aus.'],
+       ['Nacharbeiten','<code>sshd</code> neu starten, Anmeldungen im betroffenen Zeitraum prüfen, SSH-Host- und Benutzerschlüssel erneuern. Im Zweifel neu aufsetzen.'],
+       ['Prüfen','Nach dem nächsten Inventarlauf (Standard 1 h) verschwindet der Eintrag aus der Liste.']]},
+ {id:'CVE-2021-44228', name:'Log4Shell', paket:'liblog4j2-java', inst:'2.14.1-1', fix:'2.17.1-1', k:'s-krit', st:'Kritisch', cvss:'10.0', agent:'srv-app-04', os:'Debian 11', kev:true,
+    was:'Die Java-Logbibliothek Log4j 2 wertet in Logmeldungen Ausdrücke wie <code>$'+'{jndi:ldap://…}</code> aus und lädt dabei Code von einem fremden Server nach. Es reicht, dass die Anwendung eine vom Angreifer kontrollierte Zeichenkette protokolliert — etwa einen User-Agent oder Benutzernamen.',
+    vektor:'Netzwerk, ohne Anmeldung, geringe Komplexität',
+    m:[['Sofort','Von außen erreichbare Java-Anwendungen ermitteln. Ausgehende Verbindungen der Server auf LDAP, RMI und DNS beschränken.'],
+       ['Beheben','Log4j auf mindestens <code>2.17.1</code> aktualisieren (Java 8), Anwendung neu starten.'],
+       ['Übergangslösung','Wenn kein Update möglich ist: <code>zip -q -d log4j-core-*.jar org/apache/logging/log4j/core/lookup/JndiLookup.class</code>'],
+       ['Achtung','Wazuh sieht nur Pakete aus der Paketverwaltung. In Anwendungen eingebettete JAR-Dateien zusätzlich suchen: <code>find / -name "log4j-core-*.jar" 2&gt;/dev/null</code>'],
+       ['Prüfen','Webserver-Logs in Threat Hunting nach <code>jndi:</code> durchsuchen — Treffer zeigen, ob es Angriffsversuche gab.']]},
+ {id:'CVE-2024-21413', name:'Outlook „MonikerLink“', paket:'Microsoft 365 Apps (Outlook)', inst:'Stand Januar 2024', fix:'Update vom 13.02.2024', k:'s-krit', st:'Kritisch', cvss:'9.8', agent:'ws-buchhaltung-07', os:'Windows 11', kev:false,
+    was:'Links der Form <code>file:///\\\\server\\datei!irgendwas</code> umgehen die geschützte Ansicht von Outlook. Schon das Anklicken schickt den NTLM-Hash des Benutzers an den Angreifer und kann Code ausführen.',
+    vektor:'Netzwerk, ohne Anmeldung — der Benutzer muss den Link anklicken',
+    m:[['Sofort','Ausgehendes SMB (Port 445) an der Firewall ins Internet sperren — das nimmt dem Angriff die Grundlage.'],
+       ['Beheben','Office aktualisieren: Datei › Office-Konto › Updateoptionen › Jetzt aktualisieren, oder zentral über Intune/WSUS verteilen.'],
+       ['Nacharbeiten','Bei Verdacht das Passwort des Benutzers ändern — ein abgegriffener NTLM-Hash lässt sich offline knacken oder weiterreichen.'],
+       ['Prüfen','Wazuh liest installierte Programme und Hotfixes unter Windows über syscollector. <code>hotfixes</code> und <code>packages</code> müssen aktiv sein.']]},
+ {id:'CVE-2023-4863', name:'libwebp Heap-Überlauf', paket:'Google Chrome', inst:'116.0.5845.141', fix:'116.0.5845.187', k:'s-hoch', st:'Hoch', cvss:'8.8', agent:'ws-buchhaltung-07', os:'Windows 11', kev:true,
+    was:'Pufferüberlauf beim Dekodieren präparierter WebP-Bilder in der Bibliothek libwebp. Ein manipuliertes Bild auf einer Webseite oder in einer Nachricht genügt. Die Lücke wurde vor dem Patch aktiv ausgenutzt.',
+    vektor:'Netzwerk, ohne Anmeldung — der Benutzer muss eine Seite oder Nachricht öffnen',
+    m:[['Sofort','Browser auf allen Arbeitsplätzen aktualisieren und neu starten — der Patch greift erst nach dem Neustart.'],
+       ['Beheben','Auch Programme mit eingebautem Chromium oder libwebp aktualisieren: Firefox, Edge und Electron-Anwendungen wie Teams, Slack oder Signal. Unter Linux das Paket <code>libwebp7</code>.'],
+       ['Prüfen','Nach dem Update ein Inventarlauf abwarten. Bleibt der Eintrag, läuft noch eine alte Version parallel — etwa eine portable Installation.']]},
+ {id:'CVE-2024-6387', name:'regreSSHion', paket:'openssh-server', inst:'1:9.2p1-2+deb12u2', fix:'1:9.2p1-2+deb12u3', k:'s-hoch', st:'Hoch', cvss:'8.1', agent:'srv-db-02', os:'Debian 12', kev:false,
+    was:'Race Condition im Signal-Handler von <code>sshd</code>, der beim Ablauf von <code>LoginGraceTime</code> auslöst. Auf Linux mit glibc erlaubt sie Codeausführung als root ohne Anmeldung. Betroffen sind OpenSSH 8.5p1 bis 9.7p1. Die Ausnutzung braucht viele Tausend Versuche über Stunden.',
+    vektor:'Netzwerk, ohne Anmeldung, hohe Komplexität',
+    m:[['Sofort','SSH nicht offen ins Internet stellen: nur über VPN oder eine Freigabeliste erreichbar machen.'],
+       ['Beheben','<code>apt update &amp;&amp; apt install --only-upgrade openssh-server</code>, danach <code>systemctl restart ssh</code>.'],
+       ['Übergangslösung','<code>LoginGraceTime 0</code> in <code>/etc/ssh/sshd_config</code> — schließt die Lücke, macht den Dienst aber anfälliger für Überlastung über <code>MaxStartups</code>.'],
+       ['Erkennen','Die vielen abgebrochenen Verbindungen erzeugen sshd-Alarme. Active Response mit <code>firewall-drop</code> bremst den Angriff zusätzlich.']]},
+ {id:'CVE-2023-4911', name:'Looney Tunables', paket:'libc6 (glibc)', inst:'2.35-0ubuntu3.3', fix:'2.35-0ubuntu3.4', k:'s-hoch', st:'Hoch', cvss:'7.8', agent:'srv-files-02', os:'Ubuntu 22.04', kev:true,
+    was:'Pufferüberlauf im dynamischen Lader <code>ld.so</code> beim Auswerten der Umgebungsvariable <code>GLIBC_TUNABLES</code>. Ein angemeldeter Benutzer ohne Rechte wird damit über ein SUID-Programm zu root. Betroffen sind glibc 2.34 bis 2.38.',
+    vektor:'Lokal, angemeldeter Benutzer ohne besondere Rechte',
+    m:[['Beheben','<code>apt update &amp;&amp; apt install --only-upgrade libc6</code>'],
+       ['Neustart','glibc steckt in jedem laufenden Prozess. Nach dem Update alle Dienste neu starten (<code>needrestart</code>) oder den Server neu booten.'],
+       ['Priorität','Besonders dringend auf Mehrbenutzersystemen und überall, wo ein Angreifer schon eine Shell haben könnte — etwa nach einer Webshell.'],
+       ['Prüfen','<code>ldd --version</code> zeigt die geladene Version nicht exakt — maßgeblich ist die Paketversion, die Wazuh meldet.']]},
+ {id:'CVE-2022-0847', name:'Dirty Pipe', paket:'linux-image', inst:'5.16.10', fix:'5.16.11', k:'s-hoch', st:'Hoch', cvss:'7.8', agent:'srv-mail-01', os:'Ubuntu', kev:true,
+    was:'Fehler in der Pipe-Verwaltung des Linux-Kernels ab 5.8: Ein Benutzer ohne Rechte kann Daten in eigentlich schreibgeschützte Dateien schreiben — etwa in <code>/etc/passwd</code> oder SUID-Programme — und wird so root.',
+    vektor:'Lokal, angemeldeter Benutzer ohne besondere Rechte',
+    m:[['Beheben','Kernel aktualisieren: behoben in 5.16.11, 5.15.25 und 5.10.102.'],
+       ['Neustart','Der neue Kernel wirkt erst nach dem Neustart. <code>uname -r</code> zeigt, welcher Kernel tatsächlich läuft.'],
+       ['Alternative','Wo kein Neustart möglich ist: Livepatch des Distributors, falls vorhanden.'],
+       ['Prüfen','Wazuh meldet den installierten Kernel. Ist das Paket aktuell, der Server aber nicht neu gestartet, verschwindet die Meldung, obwohl der alte Kernel noch läuft.']]},
+ {id:'CVE-2023-44487', name:'HTTP/2 Rapid Reset', paket:'nginx', inst:'1.25.2', fix:'1.25.3', k:'s-hoch', st:'Hoch', cvss:'7.5', agent:'srv-web-01', os:'Debian 12', kev:true,
+    was:'Schwäche im HTTP/2-Protokoll: Der Angreifer öffnet Datenströme und bricht sie sofort wieder ab. Der Server arbeitet trotzdem jede Anfrage an. Damit wurden 2023 die bis dahin größten DDoS-Angriffe gefahren.',
+    vektor:'Netzwerk, ohne Anmeldung — Folge ist Ausfall, kein Datenabfluss',
+    m:[['Beheben','nginx auf 1.25.3 oder neuer aktualisieren.'],
+       ['Absichern','<code>keepalive_requests</code> nicht über 1000 und <code>http2_max_concurrent_streams</code> beim Standard 128 lassen; zusätzlich <code>limit_req</code> und <code>limit_conn</code> setzen.'],
+       ['Ergänzend','Öffentliche Dienste hinter einem CDN oder DDoS-Schutz betreiben, etwa Cloudflare.']]}
+];
 
 /* ---------- Reiche Ansichten ---------- */
 var ANSICHT = {
@@ -1019,63 +1079,7 @@ fim:function(){
 },
 
 vuln:function(){
-  var CV = [
-   {id:'CVE-2024-3094', name:'xz-Hintertür', paket:'xz-utils / liblzma5', inst:'5.6.1-1', fix:'5.6.1+really5.4.5-1', k:'s-krit', st:'Kritisch', cvss:'10.0', agent:'ws-dev-03', os:'Debian testing', kev:false,
-    was:'Absichtlich eingeschleuste Hintertür in den Release-Archiven von xz 5.6.0 und 5.6.1. Über <code>liblzma</code>, das auf manchen Distributionen per systemd in <code>sshd</code> geladen wird, konnte der Angreifer vor der Anmeldung Code ausführen. Betroffen waren vor allem Test- und Rolling-Distributionen wie Debian testing/unstable, Fedora Rawhide und openSUSE Tumbleweed.',
-    vektor:'Netzwerk, ohne Anmeldung — nur mit dem privaten Schlüssel des Angreifers',
-    m:[['Sofort','Version prüfen: <code>xz --version</code>. War <code>sshd</code> aus dem Internet erreichbar, das System als möglicherweise kompromittiert behandeln.'],
-       ['Beheben','<code>apt update &amp;&amp; apt install --only-upgrade xz-utils liblzma5</code> — Debian liefert unter der Versionsnummer <code>5.6.1+really5.4.5</code> den sauberen Stand 5.4.5 aus.'],
-       ['Nacharbeiten','<code>sshd</code> neu starten, Anmeldungen im betroffenen Zeitraum prüfen, SSH-Host- und Benutzerschlüssel erneuern. Im Zweifel neu aufsetzen.'],
-       ['Prüfen','Nach dem nächsten Inventarlauf (Standard 1 h) verschwindet der Eintrag aus der Liste.']]},
-   {id:'CVE-2021-44228', name:'Log4Shell', paket:'liblog4j2-java', inst:'2.14.1-1', fix:'2.17.1-1', k:'s-krit', st:'Kritisch', cvss:'10.0', agent:'srv-app-04', os:'Debian 11', kev:true,
-    was:'Die Java-Logbibliothek Log4j 2 wertet in Logmeldungen Ausdrücke wie <code>$'+'{jndi:ldap://…}</code> aus und lädt dabei Code von einem fremden Server nach. Es reicht, dass die Anwendung eine vom Angreifer kontrollierte Zeichenkette protokolliert — etwa einen User-Agent oder Benutzernamen.',
-    vektor:'Netzwerk, ohne Anmeldung, geringe Komplexität',
-    m:[['Sofort','Von außen erreichbare Java-Anwendungen ermitteln. Ausgehende Verbindungen der Server auf LDAP, RMI und DNS beschränken.'],
-       ['Beheben','Log4j auf mindestens <code>2.17.1</code> aktualisieren (Java 8), Anwendung neu starten.'],
-       ['Übergangslösung','Wenn kein Update möglich ist: <code>zip -q -d log4j-core-*.jar org/apache/logging/log4j/core/lookup/JndiLookup.class</code>'],
-       ['Achtung','Wazuh sieht nur Pakete aus der Paketverwaltung. In Anwendungen eingebettete JAR-Dateien zusätzlich suchen: <code>find / -name "log4j-core-*.jar" 2&gt;/dev/null</code>'],
-       ['Prüfen','Webserver-Logs in Threat Hunting nach <code>jndi:</code> durchsuchen — Treffer zeigen, ob es Angriffsversuche gab.']]},
-   {id:'CVE-2024-21413', name:'Outlook „MonikerLink“', paket:'Microsoft 365 Apps (Outlook)', inst:'Stand Januar 2024', fix:'Update vom 13.02.2024', k:'s-krit', st:'Kritisch', cvss:'9.8', agent:'ws-buchhaltung-07', os:'Windows 11', kev:false,
-    was:'Links der Form <code>file:///\\\\server\\datei!irgendwas</code> umgehen die geschützte Ansicht von Outlook. Schon das Anklicken schickt den NTLM-Hash des Benutzers an den Angreifer und kann Code ausführen.',
-    vektor:'Netzwerk, ohne Anmeldung — der Benutzer muss den Link anklicken',
-    m:[['Sofort','Ausgehendes SMB (Port 445) an der Firewall ins Internet sperren — das nimmt dem Angriff die Grundlage.'],
-       ['Beheben','Office aktualisieren: Datei › Office-Konto › Updateoptionen › Jetzt aktualisieren, oder zentral über Intune/WSUS verteilen.'],
-       ['Nacharbeiten','Bei Verdacht das Passwort des Benutzers ändern — ein abgegriffener NTLM-Hash lässt sich offline knacken oder weiterreichen.'],
-       ['Prüfen','Wazuh liest installierte Programme und Hotfixes unter Windows über syscollector. <code>hotfixes</code> und <code>packages</code> müssen aktiv sein.']]},
-   {id:'CVE-2023-4863', name:'libwebp Heap-Überlauf', paket:'Google Chrome', inst:'116.0.5845.141', fix:'116.0.5845.187', k:'s-hoch', st:'Hoch', cvss:'8.8', agent:'ws-buchhaltung-07', os:'Windows 11', kev:true,
-    was:'Pufferüberlauf beim Dekodieren präparierter WebP-Bilder in der Bibliothek libwebp. Ein manipuliertes Bild auf einer Webseite oder in einer Nachricht genügt. Die Lücke wurde vor dem Patch aktiv ausgenutzt.',
-    vektor:'Netzwerk, ohne Anmeldung — der Benutzer muss eine Seite oder Nachricht öffnen',
-    m:[['Sofort','Browser auf allen Arbeitsplätzen aktualisieren und neu starten — der Patch greift erst nach dem Neustart.'],
-       ['Beheben','Auch Programme mit eingebautem Chromium oder libwebp aktualisieren: Firefox, Edge und Electron-Anwendungen wie Teams, Slack oder Signal. Unter Linux das Paket <code>libwebp7</code>.'],
-       ['Prüfen','Nach dem Update ein Inventarlauf abwarten. Bleibt der Eintrag, läuft noch eine alte Version parallel — etwa eine portable Installation.']]},
-   {id:'CVE-2024-6387', name:'regreSSHion', paket:'openssh-server', inst:'1:9.2p1-2+deb12u2', fix:'1:9.2p1-2+deb12u3', k:'s-hoch', st:'Hoch', cvss:'8.1', agent:'srv-db-02', os:'Debian 12', kev:false,
-    was:'Race Condition im Signal-Handler von <code>sshd</code>, der beim Ablauf von <code>LoginGraceTime</code> auslöst. Auf Linux mit glibc erlaubt sie Codeausführung als root ohne Anmeldung. Betroffen sind OpenSSH 8.5p1 bis 9.7p1. Die Ausnutzung braucht viele Tausend Versuche über Stunden.',
-    vektor:'Netzwerk, ohne Anmeldung, hohe Komplexität',
-    m:[['Sofort','SSH nicht offen ins Internet stellen: nur über VPN oder eine Freigabeliste erreichbar machen.'],
-       ['Beheben','<code>apt update &amp;&amp; apt install --only-upgrade openssh-server</code>, danach <code>systemctl restart ssh</code>.'],
-       ['Übergangslösung','<code>LoginGraceTime 0</code> in <code>/etc/ssh/sshd_config</code> — schließt die Lücke, macht den Dienst aber anfälliger für Überlastung über <code>MaxStartups</code>.'],
-       ['Erkennen','Die vielen abgebrochenen Verbindungen erzeugen sshd-Alarme. Active Response mit <code>firewall-drop</code> bremst den Angriff zusätzlich.']]},
-   {id:'CVE-2023-4911', name:'Looney Tunables', paket:'libc6 (glibc)', inst:'2.35-0ubuntu3.3', fix:'2.35-0ubuntu3.4', k:'s-hoch', st:'Hoch', cvss:'7.8', agent:'srv-files-02', os:'Ubuntu 22.04', kev:true,
-    was:'Pufferüberlauf im dynamischen Lader <code>ld.so</code> beim Auswerten der Umgebungsvariable <code>GLIBC_TUNABLES</code>. Ein angemeldeter Benutzer ohne Rechte wird damit über ein SUID-Programm zu root. Betroffen sind glibc 2.34 bis 2.38.',
-    vektor:'Lokal, angemeldeter Benutzer ohne besondere Rechte',
-    m:[['Beheben','<code>apt update &amp;&amp; apt install --only-upgrade libc6</code>'],
-       ['Neustart','glibc steckt in jedem laufenden Prozess. Nach dem Update alle Dienste neu starten (<code>needrestart</code>) oder den Server neu booten.'],
-       ['Priorität','Besonders dringend auf Mehrbenutzersystemen und überall, wo ein Angreifer schon eine Shell haben könnte — etwa nach einer Webshell.'],
-       ['Prüfen','<code>ldd --version</code> zeigt die geladene Version nicht exakt — maßgeblich ist die Paketversion, die Wazuh meldet.']]},
-   {id:'CVE-2022-0847', name:'Dirty Pipe', paket:'linux-image', inst:'5.16.10', fix:'5.16.11', k:'s-hoch', st:'Hoch', cvss:'7.8', agent:'srv-mail-01', os:'Ubuntu', kev:true,
-    was:'Fehler in der Pipe-Verwaltung des Linux-Kernels ab 5.8: Ein Benutzer ohne Rechte kann Daten in eigentlich schreibgeschützte Dateien schreiben — etwa in <code>/etc/passwd</code> oder SUID-Programme — und wird so root.',
-    vektor:'Lokal, angemeldeter Benutzer ohne besondere Rechte',
-    m:[['Beheben','Kernel aktualisieren: behoben in 5.16.11, 5.15.25 und 5.10.102.'],
-       ['Neustart','Der neue Kernel wirkt erst nach dem Neustart. <code>uname -r</code> zeigt, welcher Kernel tatsächlich läuft.'],
-       ['Alternative','Wo kein Neustart möglich ist: Livepatch des Distributors, falls vorhanden.'],
-       ['Prüfen','Wazuh meldet den installierten Kernel. Ist das Paket aktuell, der Server aber nicht neu gestartet, verschwindet die Meldung, obwohl der alte Kernel noch läuft.']]},
-   {id:'CVE-2023-44487', name:'HTTP/2 Rapid Reset', paket:'nginx', inst:'1.25.2', fix:'1.25.3', k:'s-hoch', st:'Hoch', cvss:'7.5', agent:'srv-web-01', os:'Debian 12', kev:true,
-    was:'Schwäche im HTTP/2-Protokoll: Der Angreifer öffnet Datenströme und bricht sie sofort wieder ab. Der Server arbeitet trotzdem jede Anfrage an. Damit wurden 2023 die bis dahin größten DDoS-Angriffe gefahren.',
-    vektor:'Netzwerk, ohne Anmeldung — Folge ist Ausfall, kein Datenabfluss',
-    m:[['Beheben','nginx auf 1.25.3 oder neuer aktualisieren.'],
-       ['Absichern','<code>keepalive_requests</code> nicht über 1000 und <code>http2_max_concurrent_streams</code> beim Standard 128 lassen; zusätzlich <code>limit_req</code> und <code>limit_conn</code> setzen.'],
-       ['Ergänzend','Öffentliche Dienste hinter einem CDN oder DDoS-Schutz betreiben, etwa Cloudflare.']]}
-  ];
+  var CV = CVE_FUNDE;
   var zeilen=[];
   CV.forEach(function(c,i){
     zeilen.push('<tr class="klick" tabindex="0" data-detail="cv'+i+'"><td class="mono" style="color:var(--primary)">'+c.id+'</td><td>'+c.name+
@@ -1095,7 +1099,8 @@ vuln:function(){
   return zahlen([[String(CV.length),'Offene Schwachstellen','',''],[String(krit),'Kritisch','rot','CVSS 9.0 bis 10.0'],[String(CV.length-krit),'Hoch','orange','CVSS 7.0 bis 8.9'],[String(kev),'Aktiv ausgenutzt','rot','Im CISA-Katalog der aktiv ausgenutzten Schwachstellen (KEV)']])+
     '<div class="panel"><h3>Erkannte Schwachstellen im Paketbestand <span style="font-weight:400;color:var(--muted)">— Zeile anklicken für Details und Maßnahmen</span></h3>'+
     tabelle([['CVE','Kennung im öffentlichen CVE-Verzeichnis'],['Bezeichnung',''],['Paket',''],['Installiert',''],['Behoben in','Version, ab der die Lücke geschlossen ist'],['CVSS','Schweregrad 0 bis 10'],['Agent','']], zeilen)+
-    '<p style="margin-top:12px;color:var(--muted);font-size:13px">Ermittelt aus dem gemeldeten Paketbestand, nicht durch einen aktiven Scan. Kein Netzverkehr zum Endpunkt, dafür nur so genau wie die Paketverwaltung. Die Endpunkte sind erfunden, die CVE-Angaben echt.</p></div>'+
+    '<p style="margin-top:12px;color:var(--muted);font-size:13px">Ermittelt aus dem gemeldeten Paketbestand, nicht durch einen aktiven Scan. Kein Netzverkehr zum Endpunkt, dafür nur so genau wie die Paketverwaltung. Die Endpunkte sind erfunden, die CVE-Angaben echt.</p>'+
+    '<p style="margin-top:10px"><button type="button" class="weiter" data-go="qonfirm">Als Audit-Befunde nach QONFIRM exportieren ›</button></p></div>'+
 
   '<div class="panel"><h3>So arbeitet man eine Schwachstelle ab</h3><ol class="massn gross">'+
     '<li><b>Einordnen</b>Nicht nur nach CVSS sortieren. Wichtiger ist: Wird die Lücke schon ausgenutzt (CISA-KEV-Katalog, EPSS-Wert)? Ist der Dienst aus dem Internet erreichbar? Was liegt auf dem System?</li>'+
@@ -1136,7 +1141,8 @@ sca:function(){
        ['29104','Sicherstellen, dass auditd installiert und aktiv ist','ws-buchhaltung-07','Dienst nicht aktiv'],
        ['31180','Sicherstellen, dass Container nicht privilegiert laufen','srv-web-01','2 Container privilegiert']
       ].map(function(r){ return '<tr><td class="mono">'+r[0]+'</td><td>'+r[1]+'</td><td class="agent">'+r[2]+
-        '</td><td><span class="pill rot">'+r[3]+'</span></td><td style="color:var(--muted)">siehe Richtlinie</td></tr>'; }))+'</div>';
+        '</td><td><span class="pill rot">'+r[3]+'</span></td><td style="color:var(--muted)">siehe Richtlinie</td></tr>'; }))+
+    '<p style="margin-top:12px"><button type="button" class="weiter" data-go="qonfirm">Mängel nach QONFIRM exportieren ›</button></p></div>';
 },
 
 malware:function(){
@@ -2271,6 +2277,143 @@ NACH.druck = function(){
   document.body.classList.add('druck-modus');
   document.getElementById('druck-start').addEventListener('click', function(){ window.print(); });
   return function(){ document.body.classList.remove('druck-modus'); };
+};
+
+/* ===== QONFIRM-Export: Mängel und Schwachstellen als Audit-Befunde ===== */
+var SCA_FUNDE = [
+  {id:'28515', titel:'Sicherstellen, dass SSH-Root-Anmeldung deaktiviert ist', agent:'srv-db-02', ist:'PermitRootLogin yes', soll:'PermitRootLogin no', richtlinie:'CIS Debian Linux 12 Benchmark 5.2.8', schwere:'hoch', abhilfe:'In /etc/ssh/sshd_config „PermitRootLogin no“ setzen, sshd neu laden. Administratoren melden sich als Benutzer an und wechseln mit sudo.'},
+  {id:'28520', titel:'Sicherstellen, dass SSH MaxAuthTries auf 4 oder weniger steht', agent:'srv-web-01', ist:'nicht gesetzt (Standard 6)', soll:'MaxAuthTries 4', richtlinie:'CIS Debian Linux 12 Benchmark 5.2.7', schwere:'mittel', abhilfe:'„MaxAuthTries 4“ in /etc/ssh/sshd_config eintragen, sshd neu laden.'},
+  {id:'29104', titel:'Sicherstellen, dass auditd installiert und aktiv ist', agent:'ws-buchhaltung-07', ist:'Dienst nicht aktiv', soll:'auditd aktiv und beim Start eingeschaltet', richtlinie:'CIS Ubuntu Linux 24.04 Benchmark 6.2.1', schwere:'mittel', abhilfe:'apt install auditd audispd-plugins; systemctl enable --now auditd. Ohne auditd fehlen Benutzer und Prozess in FIM-Alarmen (whodata).'},
+  {id:'31180', titel:'Sicherstellen, dass Container nicht privilegiert laufen', agent:'srv-web-01', ist:'2 Container privilegiert', soll:'kein --privileged', richtlinie:'CIS Docker Benchmark 5.4', schwere:'hoch', abhilfe:'Container ohne --privileged starten, benötigte Fähigkeiten einzeln mit --cap-add vergeben.'}
+];
+var MALWARE_FUNDE = [
+  {id:'rootcheck-87105', art:'Rootcheck', titel:'Verstecktes Verzeichnis /dev/.systemd-private', agent:'srv-web-01', schwere:'kritisch', abhilfe:'Endpunkt isolieren, Verzeichnis sichern, System forensisch prüfen; im Zweifel neu aufsetzen.'},
+  {id:'yara-webshell', art:'YARA', titel:'Regel webshell_php_generic in /var/www/html/.cache.php', agent:'srv-web-01', schwere:'kritisch', abhilfe:'Datei sichern und entfernen, Webserver-Logs auswerten, Zugangsdaten der Anwendung erneuern, Upload-Funktion absichern.'}
+];
+function qfSchwere(s){ return s==='kritisch'?'s-krit':(s==='hoch'?'s-hoch':(s==='mittel'?'s-warn':'s-ok')); }
+function qfCvssSchwere(c){ var v=parseFloat(c); return v>=9?'kritisch':(v>=7?'hoch':(v>=4?'mittel':'niedrig')); }
+function qfBefunde(){
+  var L=[];
+  CVE_FUNDE.forEach(function(c){
+    L.push({typ:'cve', quelle:'wazuh:vulnerability-detection', id:c.id, titel:c.name+' — '+c.paket, agent:c.agent, os:c.os, schwere:qfCvssSchwere(c.cvss), cvss:parseFloat(c.cvss), ausgenutzt:!!c.kev,
+      ist:c.paket+' '+c.inst, soll:'ab Version '+c.fix, beschreibung:c.was.replace(/<[^>]+>/g,''), angriffsweg:c.vektor,
+      massnahmen:c.m.map(function(m){ return m[0]+': '+m[1].replace(/<[^>]+>/g,'').replace(/&amp;/g,'&').replace(/&gt;/g,'>').replace(/&lt;/g,'<'); }),
+      referenzen:['https://nvd.nist.gov/vuln/detail/'+c.id,'https://www.cve.org/CVERecord?id='+c.id]});
+  });
+  SCA_FUNDE.forEach(function(s){
+    L.push({typ:'sca', quelle:'wazuh:sca', id:'SCA-'+s.id, titel:s.titel, agent:s.agent, schwere:s.schwere, ist:s.ist, soll:s.soll, richtlinie:s.richtlinie, massnahmen:[s.abhilfe], referenzen:[]});
+  });
+  MALWARE_FUNDE.forEach(function(m){
+    L.push({typ:'malware', quelle:'wazuh:malware-detection', id:m.id, titel:m.art+': '+m.titel, agent:m.agent, schwere:m.schwere, ist:'Fund vorhanden', soll:'kein Fund', massnahmen:[m.abhilfe], referenzen:[]});
+  });
+  return L;
+}
+function qfSha256(s){
+  var enc=new TextEncoder().encode(s);
+  if(!(window.crypto && crypto.subtle)) return Promise.resolve('');
+  return crypto.subtle.digest('SHA-256', enc).then(function(b){ return Array.prototype.map.call(new Uint8Array(b), function(x){ return ('0'+x.toString(16)).slice(-2); }).join(''); });
+}
+function qfStabil(o){ /* deterministische JSON-Darstellung für den Hash */
+  if(Array.isArray(o)) return '['+o.map(qfStabil).join(',')+']';
+  if(o && typeof o==='object') return '{'+Object.keys(o).sort().map(function(k){ return JSON.stringify(k)+':'+qfStabil(o[k]); }).join(',')+'}';
+  return JSON.stringify(o);
+}
+function qfPaket(befunde, meta){
+  var jetzt=new Date().toISOString();
+  var eintraege=befunde.map(function(b,i){
+    var e={finding_id:'WZ-'+jetzt.slice(0,10).replace(/-/g,'')+'-'+('00'+(i+1)).slice(-3), source:b.quelle, type:b.typ, external_id:b.id, title:b.titel,
+      asset:{name:b.agent, os:b.os||null}, severity:b.schwere, cvss:b.cvss||null, exploited:!!b.ausgenutzt,
+      observed:b.ist, expected:b.soll, policy:b.richtlinie||null, description:b.beschreibung||null, attack_vector:b.angriffsweg||null,
+      remediation:b.massnahmen, references:b.referenzen, detected_at:jetzt, status:'open'};
+    return e;
+  });
+  return Promise.all(eintraege.map(function(e){ return qfSha256(qfStabil(e)); })).then(function(hashes){
+    eintraege.forEach(function(e,i){ e.evidence_sha256=hashes[i]; });
+    var paket={schema:'qonfirm.import', schema_version:'1.0', generator:'wazuh.cyqore.de', generated_at:jetzt,
+      auditor:{id:meta.auditor||null, name:meta.name||null}, client:{name:meta.mandant||null, system:'Wazuh 4.14 (Demo)'}, note:meta.notiz||null,
+      summary:{total:eintraege.length, critical:eintraege.filter(function(e){return e.severity==='kritisch';}).length, high:eintraege.filter(function(e){return e.severity==='hoch';}).length, exploited:eintraege.filter(function(e){return e.exploited;}).length},
+      findings:eintraege};
+    return qfSha256(qfStabil(eintraege)).then(function(h){ paket.manifest_sha256=h; return paket; });
+  });
+}
+function qfCsv(paket){
+  var k=['finding_id','type','external_id','title','asset','severity','cvss','exploited','observed','expected','policy','remediation','references','evidence_sha256'];
+  function z(v){ v=(v===null||v===undefined)?'':String(v); return '"'+v.replace(/"/g,'""')+'"'; }
+  return '﻿'+k.join(';')+'\n'+paket.findings.map(function(f){
+    return [f.finding_id,f.type,f.external_id,f.title,f.asset.name,f.severity,f.cvss,f.exploited?'ja':'nein',f.observed,f.expected,f.policy,f.remediation.join(' | '),f.references.join(' '),f.evidence_sha256].map(z).join(';');
+  }).join('\n');
+}
+function qfDownload(name, inhalt, typ){
+  var b=new Blob([inhalt],{type:typ}), u=URL.createObjectURL(b), a=document.createElement('a');
+  a.href=u; a.download=name; document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(function(){ URL.revokeObjectURL(u); },2000);
+}
+ANSICHT.qonfirm = function(){
+  var B=qfBefunde();
+  var zeilen=B.map(function(b,i){
+    return '<tr><td><input type="checkbox" class="qf-wahl" data-i="'+i+'" checked aria-label="Befund auswählen"></td><td><span class="pill">'+(b.typ==='cve'?'CVE':(b.typ==='sca'?'SCA':'Malware'))+'</span></td>'+
+      '<td class="mono" style="color:var(--primary)">'+b.id+'</td><td>'+xmlEsc(b.titel)+(b.ausgenutzt?' <span class="pill rot">ausgenutzt</span>':'')+'</td><td class="agent">'+b.agent+'</td><td><span class="stufe '+qfSchwere(b.schwere)+'">'+b.schwere+'</span></td></tr>';
+  });
+  var meta=speicherLesen('qonfirm-meta', {});
+  return '<div class="panel"><p>Überträgt die erkannten Schwachstellen (CVE), nicht bestandenen Härtungsprüfungen (SCA) und Malware-Funde als Audit-Befunde an <b>QONFIRM</b>, das Audit-Werkzeug von CYQORE. Jeder Befund bekommt eine SHA-256-Prüfsumme, das Paket eine Manifest-Prüfsumme — so bleibt nachweisbar, dass nichts nachträglich verändert wurde.</p>'+
+    '<div class="werk-form">'+
+      '<label>Auditor-ID<input id="qf-auditor" type="text" class="werk-input" placeholder="z. B. MSC" value="'+xmlEsc(meta.auditor||'')+'"></label>'+
+      '<label>Auditor (Name)<input id="qf-name" type="text" class="werk-input" value="'+xmlEsc(meta.name||'')+'"></label>'+
+      '<label>Mandant / System<input id="qf-mandant" type="text" class="werk-input" placeholder="z. B. BwK KO" value="'+xmlEsc(meta.mandant||'')+'"></label>'+
+      '<label>QONFIRM-Endpunkt (optional)<input id="qf-url" type="url" class="werk-input" placeholder="https://qonfirm.de/api/import" value="'+xmlEsc(meta.url||'')+'"></label>'+
+      '<label class="werk-breit">Anmerkung zum Export<input id="qf-notiz" type="text" class="werk-input" value="'+xmlEsc(meta.notiz||'')+'"></label>'+
+    '</div></div>'+
+    '<div class="panel"><h3>Befunde <span style="font-weight:400;color:var(--muted)">— abwählen, was nicht exportiert werden soll</span></h3>'+
+      '<div class="sim-steuer"><button type="button" id="qf-alle">Alle</button><button type="button" id="qf-keine">Keine</button><button type="button" id="qf-nur-hoch">Nur kritisch und hoch</button><button type="button" id="qf-nur-kev">Nur aktiv ausgenutzt</button></div>'+
+      tabelle([['',''],['Art',''],['ID',''],['Befund',''],['Agent',''],['Schwere','']], zeilen)+'</div>'+
+    '<div class="panel"><h3>Export</h3><div id="qf-zusammen"></div>'+
+      '<div class="sim-steuer" style="margin-top:10px"><button type="button" id="qf-json" class="primaer" style="min-width:150px">JSON herunterladen</button><button type="button" id="qf-csv">CSV herunterladen</button><button type="button" id="qf-kopie">JSON in die Zwischenablage</button><button type="button" id="qf-senden">An QONFIRM senden</button></div>'+
+      '<p class="demo-hinweis" id="qf-status"></p>'+
+      '<details style="margin-top:12px"><summary style="cursor:pointer;font-size:13px">Vorschau des JSON-Pakets</summary><pre class="hell" id="qf-vorschau" style="margin-top:8px;max-height:420px;overflow:auto"></pre></details></div>'+
+    '<div class="panel"><h3>Importformat <code>qonfirm.import</code> 1.0</h3>'+
+      tabelle([['Feld',''],['Inhalt','']],
+        [['finding_id','Laufende Kennung des Exports, z. B. WZ-20260928-001'],['source / type','Herkunft in Wazuh und Art: cve, sca oder malware'],['external_id','CVE-Nummer, SCA-Prüfpunkt oder Fund-ID'],
+         ['asset','Endpunkt (Agentenname, Betriebssystem)'],['severity / cvss / exploited','Schwere in Worten, CVSS-Wert, aktiv ausgenutzt (CISA KEV)'],['observed / expected','Ist-Zustand und Soll-Zustand — die Grundlage jedes Mangels'],
+         ['policy','Richtlinie und Prüfpunkt bei SCA-Befunden'],['remediation','Maßnahmen als Liste, in der Reihenfolge der Abarbeitung'],['references','Links zu NVD und CVE.org'],
+         ['evidence_sha256','Prüfsumme des Befunds über alle Felder, deterministisch sortiert'],['manifest_sha256','Prüfsumme über alle Befunde des Pakets — im Bericht mit ausweisen'],['status','open — QONFIRM führt den Befund ab hier weiter']
+        ].map(function(r){ return '<tr><td class="mono">'+r[0]+'</td><td>'+r[1]+'</td></tr>'; }))+
+      '<p style="margin-top:12px;color:var(--muted);font-size:13px">Das Paket ist nach den Vorgaben für QONFIRM aufgebaut: Prüfsumme je Befund, Zeitstempel, Auditor-ID, signierbares JSON. Solange kein Endpunkt eingetragen ist, wird die Datei heruntergeladen und lässt sich in QONFIRM importieren.</p></div>';
+};
+NACH.qonfirm = function(){
+  var $=function(id){ return document.getElementById(id); };
+  var B=qfBefunde(), paket=null;
+  function meta(){ var m={auditor:$('qf-auditor').value.trim(), name:$('qf-name').value.trim(), mandant:$('qf-mandant').value.trim(), url:$('qf-url').value.trim(), notiz:$('qf-notiz').value.trim()}; speicherSchreiben('qonfirm-meta', m); return m; }
+  function gewaehlt(){ return Array.prototype.filter.call(haupt.querySelectorAll('.qf-wahl'), function(c){ return c.checked; }).map(function(c){ return B[+c.getAttribute('data-i')]; }); }
+  function bauen(){
+    var G=gewaehlt(), m=meta();
+    return qfPaket(G, m).then(function(p){
+      paket=p;
+      $('qf-zusammen').innerHTML=zahlen([[String(p.summary.total),'Befunde','',''],[String(p.summary.critical),'Kritisch','rot',''],[String(p.summary.high),'Hoch','orange',''],[String(p.summary.exploited),'Aktiv ausgenutzt','rot','']])+
+        '<p style="font-size:12.5px;color:var(--muted)">Manifest-Prüfsumme: <code>'+(p.manifest_sha256||'— (nur über HTTPS verfügbar)')+'</code></p>';
+      $('qf-vorschau').textContent=JSON.stringify(p,null,2);
+      $('qf-json').disabled=$('qf-csv').disabled=$('qf-kopie').disabled=$('qf-senden').disabled=(G.length===0);
+      $('qf-senden').textContent=m.url?'An QONFIRM senden':'An QONFIRM senden (Endpunkt fehlt)';
+      return p;
+    });
+  }
+  function dateiname(ext){ var m=meta(); return 'qonfirm-import_'+(m.mandant||'wazuh').replace(/[^A-Za-z0-9_-]+/g,'-')+'_'+new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')+'.'+ext; }
+  Array.prototype.forEach.call(haupt.querySelectorAll('.qf-wahl, .werk-form input'), function(el){ el.addEventListener('change', bauen); el.addEventListener('input', bauen); });
+  $('qf-alle').addEventListener('click', function(){ haupt.querySelectorAll('.qf-wahl').forEach(function(c){ c.checked=true; }); bauen(); });
+  $('qf-keine').addEventListener('click', function(){ haupt.querySelectorAll('.qf-wahl').forEach(function(c){ c.checked=false; }); bauen(); });
+  $('qf-nur-hoch').addEventListener('click', function(){ haupt.querySelectorAll('.qf-wahl').forEach(function(c){ var s=B[+c.getAttribute('data-i')].schwere; c.checked=(s==='kritisch'||s==='hoch'); }); bauen(); });
+  $('qf-nur-kev').addEventListener('click', function(){ haupt.querySelectorAll('.qf-wahl').forEach(function(c){ c.checked=!!B[+c.getAttribute('data-i')].ausgenutzt; }); bauen(); });
+  $('qf-json').addEventListener('click', function(){ bauen().then(function(p){ qfDownload(dateiname('json'), JSON.stringify(p,null,2), 'application/json'); $('qf-status').textContent=p.summary.total+' Befunde als JSON exportiert.'; }); });
+  $('qf-csv').addEventListener('click', function(){ bauen().then(function(p){ qfDownload(dateiname('csv'), qfCsv(p), 'text/csv;charset=utf-8'); $('qf-status').textContent=p.summary.total+' Befunde als CSV exportiert (Trennzeichen Semikolon, für Excel).'; }); });
+  $('qf-kopie').addEventListener('click', function(){ bauen().then(function(p){ var t=JSON.stringify(p,null,2); if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(function(){ $('qf-status').textContent='JSON in der Zwischenablage.'; }, function(){ $('qf-status').textContent='Kopieren nicht möglich — bitte JSON herunterladen.'; }); }); });
+  $('qf-senden').addEventListener('click', function(){
+    var m=meta(); if(!m.url){ $('qf-status').textContent='Bitte zuerst den QONFIRM-Endpunkt eintragen — oder JSON herunterladen und in QONFIRM importieren.'; return; }
+    bauen().then(function(p){
+      $('qf-status').textContent='Sende …';
+      return fetch(m.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)}).then(function(r){
+        $('qf-status').textContent=r.ok?('QONFIRM hat '+p.summary.total+' Befunde angenommen (HTTP '+r.status+').'):('QONFIRM hat abgelehnt: HTTP '+r.status+'. Datei stattdessen herunterladen.');
+      }).catch(function(){ $('qf-status').textContent='Endpunkt nicht erreichbar. Datei stattdessen herunterladen und in QONFIRM importieren.'; });
+    });
+  });
+  bauen();
 };
 
 /* ---------- Seitenleiste ---------- */
