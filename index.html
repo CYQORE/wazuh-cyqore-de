@@ -19,7 +19,7 @@
   --primary-bg:#E6F1FA; --primary-hover:#005A99; --hover:#F1F6FB;
   --ok:#54B399; --warn:#D6BF57; --hoch:#E7664C; --krit:#BD271E;
   --g-basis:#6092C0; --g-endp:#54B399; --g-intel:#E7664C;
-  --g-ops:#9170B8; --g-cloud:#D36086; --g-verw:#B9A888;
+  --g-ops:#9170B8; --g-cloud:#D36086; --g-verw:#B9A888; --g-werk:#2E8B8B;
   --kopf:#1A1C21; --kopf-text:#C8CCD4; --kopf-muted:#98A2B3; --kopf-b:#E4E7EC; --kopf-rand:rgba(255,255,255,.2);
   --band-bg:#FFF3E0; --band-line:#F0C48A; --band-text:#7A5A22; --band-head:#5A3D0A;
   --chip:#EEF1F6; --detail:#F4F8FC;
@@ -272,6 +272,26 @@ tr.offen{background:var(--primary-bg)}
 @keyframes demoNeu{from{background:var(--primary-bg)} to{background:transparent}}
 tr.demo-neu{animation:demoNeu 2.4s ease-out}
 @media (prefers-reduced-motion:reduce){tr.demo-neu{animation:none}}
+.werk-form{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:10px 16px; margin-top:12px}
+.werk-form label{display:flex; flex-direction:column; gap:4px; font-size:11.5px; color:var(--muted)}
+.werk-form label.werk-breit{grid-column:1 / -1}
+.werk-form label.werk-check{flex-direction:row; align-items:center; gap:8px; font-size:13px; color:var(--text)}
+.werk-form select,.werk-input{font-family:inherit; font-size:12.5px; border:1px solid var(--line); background:var(--panel); color:var(--text); border-radius:4px; padding:6px 10px; max-width:100%}
+textarea.werk-input{font-family:var(--m); font-size:11.5px; resize:vertical}
+.quiz-antwort{display:flex; gap:9px; align-items:flex-start; font-size:13.5px; padding:5px 0; cursor:pointer}
+.quiz-frage.ok{border-color:var(--ok)} .quiz-frage.falsch{border-color:var(--krit)}
+.quiz-frage .quiz-erkl{margin-top:10px}
+.ck-punkt{display:flex; gap:10px; align-items:flex-start; font-size:13.5px; padding:6px 0; border-bottom:1px solid var(--line-soft); cursor:pointer}
+.ck-punkt:last-child{border-bottom:0} .ck-punkt input:checked + span{color:var(--muted); text-decoration:line-through}
+.glossar{display:grid; grid-template-columns:minmax(140px,220px) 1fr; gap:9px 18px; font-size:13.5px; margin:0}
+.glossar dt{font-weight:600; color:var(--head)} .glossar dd{margin:0; color:var(--text)}
+@media (max-width:600px){.glossar{grid-template-columns:1fr} .glossar dd{margin-bottom:6px}}
+.detail-inhalt.pb{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+@media print{
+  body.druck-modus .kopf, body.druck-modus .intro, body.druck-modus .band, body.druck-modus .seite, body.druck-modus .fuss, body.druck-modus .druck-nicht, body.druck-modus .titel{display:none !important}
+  body.druck-modus .haupt{padding:0} body.druck-modus .panel{break-inside:avoid; box-shadow:none; border:1px solid #bbb}
+  body.druck-modus{background:#fff; color:#000}
+}
 /* Aufgeklappte Zeile */
 tr.detail > td{background:var(--detail); padding:0; border-bottom:1px solid var(--line)}
 .detail-inhalt{display:grid; grid-template-columns:repeat(auto-fit,minmax(238px,1fr)); gap:16px; padding:15px 14px}
@@ -513,10 +533,11 @@ var G = {
   intel:'<circle cx="8" cy="8" r="5.6" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="8" cy="8" r="1.7" fill="currentColor"/><path d="M8 .9v2.3M8 12.8v2.3M.9 8h2.3M12.8 8h2.3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
   ops  :'<rect x="2.6" y="1.9" width="10.8" height="12.2" rx="1.4" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M5.4 6.2l1.5 1.5 3-3M5.4 10.9h5.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
   cloud:'<path d="M4.3 12.2a3.1 3.1 0 01-.3-6.2 4.1 4.1 0 017.9-.7 2.8 2.8 0 01-.5 6.9z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/>',
-  verw :'<path d="M2.4 4.6h11.2M2.4 8h11.2M2.4 11.4h11.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="5.6" cy="4.6" r="1.7" fill="var(--panel)" stroke="currentColor" stroke-width="1.5"/><circle cx="10.4" cy="8" r="1.7" fill="var(--panel)" stroke="currentColor" stroke-width="1.5"/><circle cx="6.4" cy="11.4" r="1.7" fill="var(--panel)" stroke="currentColor" stroke-width="1.5"/>'
+  verw :'<path d="M2.4 4.6h11.2M2.4 8h11.2M2.4 11.4h11.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="5.6" cy="4.6" r="1.7" fill="var(--panel)" stroke="currentColor" stroke-width="1.5"/><circle cx="10.4" cy="8" r="1.7" fill="var(--panel)" stroke="currentColor" stroke-width="1.5"/><circle cx="6.4" cy="11.4" r="1.7" fill="var(--panel)" stroke="currentColor" stroke-width="1.5"/>',
+  werk :'<path d="M3 13.2l3.2-3.2M8.6 4.4l3-3 3 3-3 3zM4.2 6.6l5.2 5.2" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
 };
 var FARBE = {basis:'var(--g-basis)', endp:'var(--g-endp)', intel:'var(--g-intel)',
-             ops:'var(--g-ops)', cloud:'var(--g-cloud)', verw:'var(--g-verw)'};
+             ops:'var(--g-ops)', cloud:'var(--g-cloud)', verw:'var(--g-verw)', werk:'var(--g-werk)'};
 function glyph(g, gross){
   return '<span class="glyph" style="background:color-mix(in srgb,'+FARBE[g]+' 14%,transparent);color:'+FARBE[g]+'">'+
          '<svg viewBox="0 0 16 16" aria-hidden="true">'+G[g]+'</svg></span>';
@@ -811,7 +832,24 @@ var M = [
   zeigt:'Decoder, extrahierte Felder und ausgelöste Regel zur eingegebenen Zeile.',
   quelle:'Entspricht /var/ossec/bin/wazuh-logtest auf der Kommandozeile.',
   konfig:'Keine.',
-  alarme:'Keine — es erzeugt nichts, es prüft nur.'}
+  alarme:'Keine — es erzeugt nichts, es prüft nur.'},
+ /* ===== Lernen & Werkzeuge ===== */
+ {id:'quiz', g:'werk', n:'Wissenstest', kurz:'15 Fragen mit Auswertung.',
+  tip:'Fragen zu Architektur, Agenten, Stufen, Intervallen und Schwachstellen — mit Erklärung zu jeder Antwort. Passt als Abschluss einer Schulung.'},
+ {id:'regelbau', g:'werk', n:'Regel-Baukasten', kurz:'Eigene Regel zusammenklicken.',
+  tip:'Logquelle, Häufigkeit, Zeitraum und Stufe auswählen — die fertige Regel für local_rules.xml entsteht sofort, auf Wunsch mit Active Response.'},
+ {id:'agentgen', g:'werk', n:'Agenten-Baukasten', kurz:'Eigenen Agenten nach Bedarf zusammenstellen.',
+  tip:'Name, Gruppe, Dateiintegrität, Logquellen, Prüfintervalle und Labels anklicken — heraus kommen die agent.conf für die Gruppe, der Installationsbefehl für den Agenten und die Befehle zum Einspielen.'},
+ {id:'checkliste', g:'werk', n:'Checkliste Inbetriebnahme', kurz:'Von der Installation bis zum Tuning.',
+  tip:'Alle Schritte von der Vorbereitung über Härtung und Agenten-Rollout bis zum Tuning der ersten Wochen. Der Stand bleibt im Browser gespeichert.'},
+ {id:'playbooks', g:'werk', n:'Incident-Playbooks', kurz:'Abläufe für typische Alarme.',
+  tip:'Was tun bei Brute-Force, Webshell, Ransomware-Verdacht, verstummtem Agenten, kritischer Schwachstelle oder Rechteausweitung — je in vier Schritten.'},
+ {id:'glossar', g:'werk', n:'Glossar', kurz:'Begriffe kurz erklärt, mit Suche.',
+  tip:'Von Active Response bis WPK: die Begriffe, die in Wazuh und auf dieser Seite vorkommen.'},
+ {id:'vergleich', g:'werk', n:'Wazuh im Vergleich', kurz:'Splunk, Elastic Security, Sentinel.',
+  tip:'Lizenz, Kosten, Umfang und Stärken im Vergleich zu Splunk Enterprise Security, Elastic Security und Microsoft Sentinel.'},
+ {id:'druck', g:'werk', n:'Handout drucken', kurz:'Kompakte Tabellen als PDF.',
+  tip:'Ports, Pfade, Intervalle, Stufen und Befehle auf wenigen Seiten — zum Ausdrucken oder als PDF sichern.'}
 ];
 
 var GRUPPEN = [
@@ -820,7 +858,8 @@ var GRUPPEN = [
   {k:'intel',  t:'Threat Intelligence'},
   {k:'ops',    t:'Security Operations'},
   {k:'cloud',  t:'Cloud Security'},
-  {k:'verw',   t:'Verwaltung'}
+  {k:'verw',   t:'Verwaltung'},
+  {k:'werk',   t:'Lernen & Werkzeuge'}
 ];
 var INDEX={}; M.forEach(function(m){ INDEX[m.id]=m; });
 
@@ -1806,6 +1845,415 @@ function demoRat(e){
   if(R[0]==='5402') return 'Rechteausweitung per sudo. Normal auf Servern mit Administratoren, auffällig auf Arbeitsplätzen.';
   return 'Einzelereignis zur Kenntnis.';
 }
+
+/* ---------- Lernen & Werkzeuge ---------- */
+function xmlEsc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function xmlBunt(s){
+  return xmlEsc(s).replace(/(&lt;!--.*?--&gt;)/g,'<i>$1</i>')
+    .replace(/(&lt;\/?[a-zA-Z_\-]+)((?:\s[^&]*?)?)(\/?&gt;)/g,'<b>$1</b>$2<b>$3</b>');
+}
+function kopierKnopf(zielId){
+  return '<button type="button" class="weiter kopier" data-kopie="'+zielId+'">In die Zwischenablage kopieren</button>';
+}
+function kopierenVerdrahten(){
+  Array.prototype.forEach.call(haupt.querySelectorAll('[data-kopie]'), function(b){
+    b.addEventListener('click', function(){
+      var el=document.getElementById(b.getAttribute('data-kopie')); if(!el) return;
+      var t=el.textContent;
+      function ok(){ b.textContent='Kopiert'; setTimeout(function(){ b.textContent='In die Zwischenablage kopieren'; },1600); }
+      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(ok, function(){ fallback(); }); } else fallback();
+      function fallback(){ var ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); ok(); }catch(e){} document.body.removeChild(ta); }
+    });
+  });
+}
+function speicherLesen(k, std){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):std; }catch(e){ return std; } }
+function speicherSchreiben(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+
+/* ===== 1. Wissenstest ===== */
+var QUIZ = [
+  {f:'Über welchen Port schickt der Agent seine Ereignisse an den Manager?', a:['1514','1515','55000','9200'], r:0, e:'1514 (TCP) ist der Datenkanal. 1515 dient nur der einmaligen Registrierung, 55000 ist die API und 9200 der Indexer.'},
+  {f:'Ab welcher Stufe gilt ein Alarm in Wazuh als hochprioritär?', a:['Stufe 7','Stufe 10','Stufe 12','Stufe 15'], r:2, e:'Ab Stufe 12. Dort gehören Benachrichtigung und Active Response eingerichtet.'},
+  {f:'Welche Datei verteilt der Manager automatisch an alle Agenten einer Gruppe?', a:['ossec.conf','agent.conf','local_internal_options.conf','client.keys'], r:1, e:'Die agent.conf im Gruppenordner unter /var/ossec/etc/shared/<gruppe>/ wird beim nächsten Keepalive verteilt.'},
+  {f:'Wie oft läuft die Dateiintegritätsprüfung (syscheck) standardmäßig?', a:['Alle 5 Minuten','Jede Stunde','Alle 12 Stunden','Einmal täglich'], r:2, e:'frequency steht standardmäßig auf 43200 Sekunden, also 12 Stunden. Sofortige Meldung geht nur mit realtime oder whodata.'},
+  {f:'Welches Minimum gilt für das Intervall des Inventars (syscollector)?', a:['1 Sekunde','10 Sekunden','60 Sekunden','5 Minuten'], r:2, e:'Kleinere Werte als 60 Sekunden hebt Wazuh automatisch auf 60 Sekunden an.'},
+  {f:'Ab welcher ID sollen eigene Regeln beginnen?', a:['1000','10000','100000','500000'], r:2, e:'Eigene Regeln gehören in local_rules.xml mit IDs ab 100000. Darunter liegt der mitgelieferte Regelsatz, Kollisionen führen zu still verworfenen Regeln.'},
+  {f:'Woher weiß Wazuh, welche Pakete verwundbar sind?', a:['Es scannt die Server über das Netz','Aus dem Paketinventar des Agenten, abgeglichen mit CVE-Feeds','Aus den Firewall-Logs','Aus dem Windows-Ereignisprotokoll'], r:1, e:'syscollector meldet die installierten Pakete, der Manager vergleicht Name und Version mit dem CVE-Bestand. Kein aktiver Scan.'},
+  {f:'Was bedeutet whodata bei der Dateiintegrität?', a:['Nur Dateien bestimmter Benutzer werden geprüft','Zusätzlich werden Benutzer und Prozess der Änderung erfasst','Die Prüfung läuft als anderer Benutzer','Änderungen werden per E-Mail gemeldet'], r:1, e:'whodata liefert, wer die Datei mit welchem Prozess geändert hat. Unter Linux braucht das auditd.'},
+  {f:'Welche Einstellung muss auf dem Agenten gesetzt sein, damit Befehle aus der agent.conf laufen?', a:['auto_restart=yes in ossec.conf','remote_commands=1 in local_internal_options.conf','enabled=yes im Block <active-response>','Keine, das geht immer'], r:1, e:'Aus Sicherheitsgründen führt der Agent entfernte Befehle erst aus, wenn logcollector.remote_commands=1 bzw. wazuh_command.remote_commands=1 lokal gesetzt ist.'},
+  {f:'Ein Agent meldet sich nicht mehr. Welche Regel greift?', a:['Regel 504','Regel 550','Regel 5760','Regel 23505'], r:0, e:'Regel 504 „Wazuh agent disconnected“, Stufe 3. Für wichtige Server lohnt es sich, die Stufe in local_rules.xml anzuheben.'},
+  {f:'Wo legt der Manager Alarme als JSON ab?', a:['/var/ossec/logs/ossec.log','/var/ossec/logs/alerts/alerts.json','/var/ossec/etc/alerts.conf','/var/log/wazuh/alerts.log'], r:1, e:'alerts.json ist die Quelle, die Filebeat liest und an den Indexer schickt.'},
+  {f:'Was ist der CISA-KEV-Katalog?', a:['Eine Liste aller CVEs mit CVSS über 9','Eine Liste von Schwachstellen, die nachweislich aktiv ausgenutzt werden','Der Regelsatz von Wazuh','Ein Windows-Update-Katalog'], r:1, e:'Known Exploited Vulnerabilities: Schwachstellen, die aktiv ausgenutzt werden. Sie haben Vorrang vor einem hohen CVSS-Wert allein.'},
+  {f:'Welche Aussage zu Agent und Manager stimmt?', a:['Der Agent darf neuer sein als der Manager','Der Agent darf älter sein als der Manager, aber nicht neuer','Beide müssen exakt dieselbe Version haben','Die Version spielt keine Rolle'], r:1, e:'Ältere Agenten verbinden sich problemlos, neuere nicht. Deshalb erst den Manager, dann die Agenten aktualisieren.'},
+  {f:'Wozu dient der Puffer <client_buffer> auf dem Agenten?', a:['Er speichert Alarme für das Dashboard','Er fängt Lastspitzen ab und begrenzt die Senderate zum Manager','Er hält die Konfiguration im Speicher','Er verschlüsselt die Verbindung'], r:1, e:'Der Puffer verhindert, dass ein gesprächiger Endpunkt den Manager überflutet. Standard: 5000 Ereignisse, 500 pro Sekunde.'},
+  {f:'Welcher Befehl prüft eine Logzeile gegen Decoder und Regeln, ohne den Manager neu zu starten?', a:['wazuh-control test','agent_control -t','wazuh-logtest','manage_agents -l'], r:2, e:'/var/ossec/bin/wazuh-logtest zeigt sofort, welcher Decoder greift und welche Regel auslöst.'}
+];
+ANSICHT.quiz = function(){
+  var s='<div class="panel"><p>'+QUIZ.length+' Fragen zu Agenten, Stufen, Intervallen und Schwachstellen. Am Ende gibt es die Auswertung mit Erklärung zu jeder Frage.</p></div>';
+  QUIZ.forEach(function(q,i){
+    s+='<div class="panel quiz-frage" id="qf'+i+'"><h3>'+(i+1)+'. '+q.f+'</h3>'+q.a.map(function(a,j){
+      return '<label class="quiz-antwort"><input type="radio" name="q'+i+'" value="'+j+'"> <span>'+a+'</span></label>';
+    }).join('')+'<div class="quiz-erkl" hidden></div></div>';
+  });
+  s+='<div class="panel"><div class="sim-steuer" style="margin:0"><button type="button" id="quiz-auswerten" class="primaer" style="min-width:120px">Auswerten</button><button type="button" id="quiz-neu">Zurücksetzen</button></div><div id="quiz-ergebnis"></div></div>';
+  return s;
+};
+NACH.quiz = function(){
+  var ausw=document.getElementById('quiz-auswerten'), neu=document.getElementById('quiz-neu'), erg=document.getElementById('quiz-ergebnis');
+  ausw.addEventListener('click', function(){
+    var richtig=0, offen=0;
+    QUIZ.forEach(function(q,i){
+      var box=document.getElementById('qf'+i), w=box.querySelector('input:checked'), erk=box.querySelector('.quiz-erkl');
+      box.classList.remove('ok','falsch');
+      if(!w){ offen++; erk.hidden=true; return; }
+      var ok=(+w.value===q.r); if(ok) richtig++;
+      box.classList.add(ok?'ok':'falsch');
+      erk.innerHTML='<div class="treffer"><b>'+(ok?'Richtig':'Richtig wäre: '+q.a[q.r])+'</b><span>'+q.e+'</span></div>'; erk.hidden=false;
+    });
+    var n=QUIZ.length, p=Math.round(richtig/n*100);
+    var text=p>=90?'Sehr gut — das reicht für den Betrieb.':(p>=70?'Solide. Die falschen Antworten lohnen einen zweiten Blick.':(p>=40?'Grundlagen sitzen teilweise. Architektur und Agenten-Konfiguration noch einmal durchgehen.':'Am besten noch einmal von vorn: Architektur, Regeln und Agenten-Konfiguration.'));
+    erg.innerHTML=zahlen([[richtig+' / '+n,'Richtig',p>=70?'gruen':'rot',''],[p+' %','Ergebnis','',''],[String(offen),'Nicht beantwortet','','']])+'<p style="font-size:13.5px">'+text+'</p>';
+    if(offen===0 || richtig>0) document.getElementById('qf0').scrollIntoView({behavior:reduziert?'auto':'smooth', block:'start'});
+  });
+  neu.addEventListener('click', function(){ oeffne('quiz','klick'); });
+};
+
+/* ===== 2. Regel-Baukasten ===== */
+var RB_QUELLEN = [
+  {k:'sshd', n:'SSH: fehlgeschlagene Anmeldung', sid:'5760', grp:'local,syslog,sshd,', felder:['same_source_ip','same_user'], mitre:'T1110', desc:'SSH: mehrfach fehlgeschlagene Anmeldung'},
+  {k:'sshok', n:'SSH: erfolgreiche Anmeldung', sid:'5715', grp:'local,syslog,sshd,', felder:['same_source_ip','same_user'], mitre:'T1078', desc:'SSH: Anmeldung von ungewöhnlicher Quelle'},
+  {k:'sudo', n:'sudo zu root', sid:'5402', grp:'local,syslog,sudo,', felder:['same_user'], mitre:'T1548.003', desc:'sudo: Rechteausweitung auf Arbeitsplatz'},
+  {k:'web', n:'Webserver: 400er-Fehler', sid:'31101', grp:'local,web,accesslog,', felder:['same_source_ip'], mitre:'T1595', desc:'Web: Scan von derselben Quelle'},
+  {k:'fim', n:'Dateiintegrität: Datei geändert', sid:'550', grp:'local,syscheck,', felder:[], mitre:'T1565.001', desc:'FIM: kritische Datei geändert'},
+  {k:'win', n:'Windows: Anmeldung fehlgeschlagen', sid:'60122', grp:'local,windows,', felder:['same_source_ip','same_user'], mitre:'T1110', desc:'Windows: mehrfach fehlgeschlagene Anmeldung'}
+];
+ANSICHT.regelbau = function(){
+  return '<div class="panel"><p>Bedingungen anklicken, die fertige Regel erscheint darunter. Sie gehört in <code>/var/ossec/etc/rules/local_rules.xml</code>; danach den Manager neu starten oder vorher mit <code>wazuh-logtest</code> prüfen.</p>'+
+    '<div class="werk-form">'+
+      '<label>Ausgangsregel<select id="rb-q">'+RB_QUELLEN.map(function(q){ return '<option value="'+q.k+'">'+q.n+' ('+q.sid+')</option>'; }).join('')+'</select></label>'+
+      '<label>Auslösen bei<select id="rb-art"><option value="haeuf">Häufung: mehrere Treffer in einem Zeitraum</option><option value="einzel">Jedem einzelnen Treffer</option></select></label>'+
+      '<label>Anzahl Treffer<input id="rb-freq" type="number" min="2" max="1000" value="5" class="werk-input"></label>'+
+      '<label>Zeitraum in Sekunden<input id="rb-tf" type="number" min="10" max="86400" value="120" class="werk-input"></label>'+
+      '<label>Gleiche Quelle<select id="rb-same"><option value="">egal</option><option value="same_source_ip">dieselbe Quell-IP</option><option value="same_user">derselbe Benutzer</option></select></label>'+
+      '<label>Stufe<select id="rb-level">'+[3,5,7,8,10,12,13,14,15].map(function(l){ return '<option value="'+l+'"'+(l===10?' selected':'')+'>'+l+'</option>'; }).join('')+'</select></label>'+
+      '<label>Regel-ID<input id="rb-id" type="number" min="100000" max="119999" value="100010" class="werk-input"></label>'+
+      '<label>Nur für Agenten (Name, leer = alle)<input id="rb-agent" type="text" placeholder="z. B. srv-web-01" class="werk-input"></label>'+
+      '<label>Zeitfenster (Ausnahme)<select id="rb-zeit"><option value="">immer</option><option value="18:00-07:00">nur außerhalb der Arbeitszeit</option><option value="00:00-05:00">nur nachts (00–05 Uhr)</option></select></label>'+
+      '<label>Beschreibung<input id="rb-desc" type="text" class="werk-input"></label>'+
+      '<label class="werk-check"><input id="rb-ar" type="checkbox"> Active Response: Quell-IP 10 Minuten sperren (firewall-drop)</label>'+
+      '<label class="werk-check"><input id="rb-mail" type="checkbox"> Nur per Benachrichtigung (kein Alarm im Dashboard, alert_by_email)</label>'+
+    '</div></div>'+
+    '<div class="panel"><h3>local_rules.xml</h3><pre id="rb-out"></pre><p style="margin-top:10px">'+kopierKnopf('rb-out')+'</p></div>'+
+    '<div class="panel" id="rb-ar-panel" hidden><h3>Dazu in der ossec.conf des Managers</h3><pre id="rb-ar-out"></pre></div>'+
+    '<div class="panel"><h3>Prüfen, bevor es scharf geht</h3><pre class="hell" id="rb-test"></pre></div>';
+};
+NACH.regelbau = function(){
+  var $=function(id){ return document.getElementById(id); };
+  var qsel=$('rb-q');
+  function q(){ return RB_QUELLEN.filter(function(x){ return x.k===qsel.value; })[0]; }
+  function bauen(){
+    var Q=q(), art=$('rb-art').value, freq=+$('rb-freq').value||5, tf=+$('rb-tf').value||120, same=$('rb-same').value, level=$('rb-level').value, id=$('rb-id').value||'100010';
+    var agent=$('rb-agent').value.trim(), zeit=$('rb-zeit').value, desc=$('rb-desc').value.trim()||Q.desc, ar=$('rb-ar').checked, mail=$('rb-mail').checked;
+    var sameSel=$('rb-same'); Array.prototype.forEach.call(sameSel.options, function(o){ if(o.value) o.disabled = Q.felder.indexOf(o.value)<0; });
+    if(same && Q.felder.indexOf(same)<0){ same=''; sameSel.value=''; }
+    $('rb-freq').disabled = $('rb-tf').disabled = sameSel.disabled = (art==='einzel');
+    var x='<group name="'+Q.grp+'">\n';
+    x+='  <!-- '+desc+' -->\n';
+    x+='  <rule id="'+id+'" level="'+level+'"'+(art==='haeuf'?' frequency="'+freq+'" timeframe="'+tf+'"':'')+'>\n';
+    x+='    '+(art==='haeuf'?'<if_matched_sid>':'<if_sid>')+Q.sid+(art==='haeuf'?'</if_matched_sid>':'</if_sid>')+'\n';
+    if(same && art==='haeuf') x+='    <'+same+' />\n';
+    if(agent) x+='    <hostname>'+agent+'</hostname>\n';
+    if(zeit) x+='    <time>'+zeit+'</time>\n';
+    x+='    <description>'+desc+'</description>\n';
+    if(Q.mitre) x+='    <mitre>\n      <id>'+Q.mitre+'</id>\n    </mitre>\n';
+    if(mail) x+='    <options>alert_by_email</options>\n';
+    if(art==='haeuf') x+='    <group>'+(Q.k==='web'?'web_scan,':'authentication_failures,')+'</group>\n';
+    x+='  </rule>\n</group>';
+    $('rb-out').innerHTML=xmlBunt(x);
+    $('rb-ar-panel').hidden=!ar;
+    if(ar){
+      $('rb-ar-out').innerHTML=xmlBunt('<active-response>\n  <command>firewall-drop</command>\n  <location>local</location>\n  <rules_id>'+id+'</rules_id>\n  <timeout>600</timeout>\n</active-response>');
+    }
+    $('rb-test').textContent='# Regel prüfen, ohne Neustart\n/var/ossec/bin/wazuh-logtest\n# dann '+(art==='haeuf'?freq+' passende Logzeilen':'eine passende Logzeile')+' einfügen'+(same==='same_source_ip'?' (mit derselben IP)':'')+'\n\n# danach aktivieren\nsystemctl restart wazuh-manager\ntail -f /var/ossec/logs/alerts/alerts.log | grep "Rule: '+id+'"';
+  }
+  ['rb-q','rb-art','rb-freq','rb-tf','rb-same','rb-level','rb-id','rb-agent','rb-zeit','rb-desc','rb-ar','rb-mail'].forEach(function(id){ $(id).addEventListener('input', bauen); $(id).addEventListener('change', bauen); });
+  qsel.addEventListener('change', function(){ $('rb-desc').value=''; });
+  bauen(); kopierenVerdrahten();
+};
+
+/* ===== 3. agent.conf-Generator ===== */
+ANSICHT.agentgen = function(){
+  return '<div class="panel"><p>Häkchen setzen, Werte eintragen — unten entstehen der Installationsbefehl für den Agenten und die <code>agent.conf</code> für seine Gruppe. Sie gehört auf den Manager nach <code>/var/ossec/etc/shared/&lt;gruppe&gt;/agent.conf</code> und wird beim nächsten Keepalive an alle Agenten der Gruppe verteilt.</p>'+
+    '<div class="werk-form">'+
+      '<label>Agentenname (keine Leerzeichen, wird bereinigt)<input id="ag-name" type="text" value="BwK-KO" class="werk-input"></label>'+
+      '<label>Gruppenname<input id="ag-grp" type="text" value="bwk-ko" class="werk-input"></label>'+
+      '<label>Manager-Adresse<input id="ag-mgr" type="text" value="wazuh.example.de" class="werk-input"></label>'+
+      '<label>Gilt für<select id="ag-os"><option value="">alle Betriebssysteme</option><option value="Linux">nur Linux</option><option value="Windows">nur Windows</option><option value="Darwin">nur macOS</option></select></label>'+
+      '<label>Standort-Label<input id="ag-standort" type="text" placeholder="z. B. rz-koblenz" class="werk-input"></label>'+
+      '<label>Kritikalität-Label<select id="ag-krit"><option value="">kein Label</option><option>niedrig</option><option>mittel</option><option>hoch</option></select></label>'+
+    '</div></div>'+
+    '<div class="panel"><h3>Dateiintegrität (FIM)</h3><div class="werk-form">'+
+      '<label class="werk-check"><input id="ag-fim" type="checkbox" checked> Dateiintegrität einrichten</label>'+
+      '<label>Prüfintervall<select id="ag-fim-freq"><option value="3600">1 Stunde</option><option value="21600">6 Stunden</option><option value="43200" selected>12 Stunden</option><option value="86400">24 Stunden</option></select></label>'+
+      '<label class="werk-breit">Überwachte Verzeichnisse (eines je Zeile)<textarea id="ag-fim-dirs" rows="4" class="werk-input">/etc\n/usr/bin\n/usr/sbin\n/home</textarea></label>'+
+      '<label class="werk-check"><input id="ag-fim-rt" type="checkbox" checked> Echtzeit (realtime)</label>'+
+      '<label class="werk-check"><input id="ag-fim-who" type="checkbox"> Benutzer und Prozess erfassen (whodata, braucht auditd)</label>'+
+      '<label class="werk-check"><input id="ag-fim-diff" type="checkbox"> Änderungen als Diff speichern (report_changes)</label>'+
+      '<label class="werk-breit">Ignorieren (eines je Zeile)<textarea id="ag-fim-ign" rows="2" class="werk-input">/etc/mtab\n/etc/mnttab</textarea></label>'+
+    '</div></div>'+
+    '<div class="panel"><h3>Logquellen</h3><div class="werk-form">'+
+      '<label class="werk-check"><input class="ag-log" type="checkbox" value="nginx"> nginx (access + error)</label>'+
+      '<label class="werk-check"><input class="ag-log" type="checkbox" value="apache"> Apache</label>'+
+      '<label class="werk-check"><input class="ag-log" type="checkbox" value="auth" checked> /var/log/auth.log (Debian/Ubuntu)</label>'+
+      '<label class="werk-check"><input class="ag-log" type="checkbox" value="secure"> /var/log/secure (RHEL/Rocky)</label>'+
+      '<label class="werk-check"><input class="ag-log" type="checkbox" value="journald"> journald</label>'+
+      '<label class="werk-check"><input class="ag-log" type="checkbox" value="docker"> Docker-Ereignisse (docker-listener)</label>'+
+      '<label class="werk-check"><input class="ag-log" type="checkbox" value="winsec"> Windows: Security-Kanal (Anmeldungen)</label>'+
+      '<label class="werk-check"><input class="ag-log" type="checkbox" value="winps"> Windows: PowerShell-Kanal</label>'+
+      '<label class="werk-check"><input class="ag-log" type="checkbox" value="ports"> Befehl: offene Ports alle 6 Minuten (braucht remote_commands)</label>'+
+    '</div></div>'+
+    '<div class="panel"><h3>Prüfungen und Inventar</h3><div class="werk-form">'+
+      '<label class="werk-check"><input id="ag-sca" type="checkbox" checked> Härtungsprüfung (SCA)</label>'+
+      '<label>SCA-Intervall<select id="ag-sca-int"><option value="6h">6 Stunden</option><option value="12h" selected>12 Stunden</option><option value="1d">täglich</option><option value="1w">wöchentlich</option></select></label>'+
+      '<label class="werk-check"><input id="ag-inv" type="checkbox" checked> Inventar (syscollector)</label>'+
+      '<label>Inventar-Intervall<select id="ag-inv-int"><option value="15m">15 Minuten</option><option value="1h" selected>1 Stunde</option><option value="6h">6 Stunden</option><option value="1d">täglich</option></select></label>'+
+      '<label class="werk-check"><input id="ag-rc" type="checkbox"> Rootcheck ausdrücklich setzen (12 h)</label>'+
+      '<label class="werk-check"><input id="ag-ar-aus" type="checkbox"> Active Response auf diesen Agenten abschalten</label>'+
+    '</div></div>'+
+    '<div class="panel"><h3>1 · Agent installieren</h3><pre class="hell" id="ag-inst"></pre><p style="margin-top:10px">'+kopierKnopf('ag-inst')+'</p></div>'+
+    '<div class="panel"><h3>2 · agent.conf der Gruppe</h3><pre id="ag-out"></pre><p style="margin-top:10px">'+kopierKnopf('ag-out')+'</p></div>'+
+    '<div class="panel"><h3>3 · Auf dem Manager einspielen</h3><pre class="hell" id="ag-cmd"></pre></div>';
+};
+NACH.agentgen = function(){
+  var $=function(id){ return document.getElementById(id); };
+  function zeilen(id){ return $(id).value.split('\n').map(function(x){ return x.trim(); }).filter(Boolean); }
+  function bauen(){
+    var grp=($('ag-grp').value.trim()||'default').replace(/[^A-Za-z0-9_.-]+/g,'-'), os=$('ag-os').value, x='';
+    var name=($('ag-name').value.trim()||'agent').replace(/[^A-Za-z0-9_.-]+/g,'-'), mgr=$('ag-mgr').value.trim()||'wazuh.example.de';
+    if($('ag-grp').value!==grp && document.activeElement!==$('ag-grp')) $('ag-grp').value=grp;
+    if($('ag-name').value!==name && document.activeElement!==$('ag-name')) $('ag-name').value=name;
+    x+='<!-- /var/ossec/etc/shared/'+grp+'/agent.conf -->\n';
+    x+='<agent_config'+(os?' os="'+os+'"':'')+'>\n';
+    var st=$('ag-standort').value.trim(), kr=$('ag-krit').value;
+    if(st||kr){ x+='  <labels>\n'; if(st) x+='    <label key="standort">'+st+'</label>\n'; if(kr) x+='    <label key="kritikalitaet">'+kr+'</label>\n'; x+='    <label key="gruppe">'+grp+'</label>\n  </labels>\n\n'; }
+    if($('ag-fim').checked){
+      var attr=[]; if($('ag-fim-rt').checked) attr.push('realtime="yes"'); if($('ag-fim-who').checked) attr.push('whodata="yes"'); if($('ag-fim-diff').checked) attr.push('report_changes="yes"');
+      x+='  <syscheck>\n    <frequency>'+$('ag-fim-freq').value+'</frequency>\n';
+      x+='    <directories check_all="yes"'+(attr.length?' '+attr.join(' '):'')+'>'+zeilen('ag-fim-dirs').join(',')+'</directories>\n';
+      zeilen('ag-fim-ign').forEach(function(i){ x+='    <ignore>'+i+'</ignore>\n'; });
+      x+='    <ignore type="sregex">.log$|.swp$|.tmp$</ignore>\n  </syscheck>\n\n';
+    }
+    var logs=Array.prototype.map.call(haupt.querySelectorAll('.ag-log:checked'), function(c){ return c.value; });
+    var L={
+      nginx:'  <localfile>\n    <location>/var/log/nginx/access.log</location>\n    <log_format>apache</log_format>\n  </localfile>\n  <localfile>\n    <location>/var/log/nginx/error.log</location>\n    <log_format>syslog</log_format>\n  </localfile>\n',
+      apache:'  <localfile>\n    <location>/var/log/apache2/access.log</location>\n    <log_format>apache</log_format>\n  </localfile>\n',
+      auth:'  <localfile>\n    <location>/var/log/auth.log</location>\n    <log_format>syslog</log_format>\n  </localfile>\n',
+      secure:'  <localfile>\n    <location>/var/log/secure</location>\n    <log_format>syslog</log_format>\n  </localfile>\n',
+      journald:'  <localfile>\n    <location>journald</location>\n    <log_format>journald</log_format>\n  </localfile>\n',
+      docker:'  <wodle name="docker-listener">\n    <disabled>no</disabled>\n    <interval>10m</interval>\n    <attempts>5</attempts>\n    <run_on_start>yes</run_on_start>\n  </wodle>\n',
+      winsec:'  <localfile>\n    <location>Security</location>\n    <log_format>eventchannel</log_format>\n    <query>Event/System[EventID=4624 or EventID=4625 or EventID=4720 or EventID=4732 or EventID=4740]</query>\n  </localfile>\n',
+      winps:'  <localfile>\n    <location>Microsoft-Windows-PowerShell/Operational</location>\n    <log_format>eventchannel</log_format>\n  </localfile>\n',
+      ports:'  <!-- braucht logcollector.remote_commands=1 auf dem Agenten -->\n  <localfile>\n    <log_format>full_command</log_format>\n    <command>ss -tulpn</command>\n    <alias>offene-ports</alias>\n    <frequency>360</frequency>\n  </localfile>\n'
+    };
+    if(logs.length){ logs.forEach(function(l){ x+=L[l]; }); x+='\n'; }
+    if($('ag-sca').checked) x+='  <sca>\n    <enabled>yes</enabled>\n    <scan_on_start>yes</scan_on_start>\n    <interval>'+$('ag-sca-int').value+'</interval>\n    <skip_nfs>yes</skip_nfs>\n  </sca>\n\n';
+    if($('ag-inv').checked) x+='  <wodle name="syscollector">\n    <disabled>no</disabled>\n    <interval>'+$('ag-inv-int').value+'</interval>\n    <scan_on_start>yes</scan_on_start>\n    <packages>yes</packages>\n    <ports all="no">yes</ports>\n    <processes>yes</processes>\n    <hotfixes>yes</hotfixes>\n  </wodle>\n\n';
+    if($('ag-rc').checked) x+='  <rootcheck>\n    <disabled>no</disabled>\n    <frequency>43200</frequency>\n    <skip_nfs>yes</skip_nfs>\n  </rootcheck>\n\n';
+    if($('ag-ar-aus').checked) x+='  <active-response>\n    <disabled>yes</disabled>\n  </active-response>\n\n';
+    x=x.replace(/\n\n$/,'\n')+'</agent_config>';
+    $('ag-out').innerHTML=xmlBunt(x);
+    var win=(os==='Windows'), lin=(os==='Linux'||!os);
+    var inst='';
+    if(lin) inst+='# Debian / Ubuntu — Agent "'+name+'" in Gruppe "'+grp+'"\ncurl -s https://packages.wazuh.com/key/GPG-KEY-WAZUH | gpg --dearmor -o /usr/share/keyrings/wazuh.gpg\necho "deb [signed-by=/usr/share/keyrings/wazuh.gpg] https://packages.wazuh.com/4.x/apt/ stable main" > /etc/apt/sources.list.d/wazuh.list\napt-get update\nWAZUH_MANAGER="'+mgr+'" WAZUH_AGENT_NAME="'+name+'" WAZUH_AGENT_GROUP="'+grp+'" WAZUH_REGISTRATION_PASSWORD="…" apt-get install -y wazuh-agent\nsystemctl daemon-reload && systemctl enable --now wazuh-agent\napt-mark hold wazuh-agent\n';
+    if(win||!os) inst+=(inst?'\n':'')+'# Windows (PowerShell als Administrator)\nInvoke-WebRequest -Uri https://packages.wazuh.com/4.x/windows/wazuh-agent-4.14.0-1.msi -OutFile $env:TEMP\\wazuh-agent.msi\nmsiexec.exe /i $env:TEMP\\wazuh-agent.msi /q WAZUH_MANAGER="'+mgr+'" WAZUH_AGENT_NAME="'+name+'" WAZUH_AGENT_GROUP="'+grp+'" WAZUH_REGISTRATION_PASSWORD="…"\nNET START Wazuh\n';
+    if(os==='Darwin') inst='# macOS\ncurl -so wazuh-agent.pkg https://packages.wazuh.com/4.x/macos/wazuh-agent-4.14.0-1.arm64.pkg\necho "WAZUH_MANAGER=\''+mgr+'\' && WAZUH_AGENT_NAME=\''+name+'\' && WAZUH_AGENT_GROUP=\''+grp+'\'" > /tmp/wazuh_envs\nsudo installer -pkg ./wazuh-agent.pkg -target /\nsudo /Library/Ossec/bin/wazuh-control start\n';
+    $('ag-inst').textContent=inst.replace(/\n$/,'');
+    $('ag-cmd').textContent='# auf dem Manager\nmkdir -p /var/ossec/etc/shared/'+grp+'\n# agent.conf dort ablegen, dann prüfen:\n/var/ossec/bin/verify-agent-conf -f /var/ossec/etc/shared/'+grp+'/agent.conf\nchown wazuh:wazuh /var/ossec/etc/shared/'+grp+'/agent.conf\n\n# Der Agent "'+name+'" landet über WAZUH_AGENT_GROUP automatisch in der Gruppe.\n# Bestehende Agenten nachträglich zuweisen:\n/var/ossec/bin/agent_groups -a -i 001 -g '+grp+'\n\n# Auf dem Agenten prüfen, was angekommen ist\ncat /var/ossec/etc/shared/merged.mg'+(logs.indexOf('ports')>=0?'\n\n# auf jedem Agenten der Gruppe, wegen des Befehls:\necho "logcollector.remote_commands=1" >> /var/ossec/etc/local_internal_options.conf\nsystemctl restart wazuh-agent':'');
+  }
+  Array.prototype.forEach.call(haupt.querySelectorAll('.werk-form input, .werk-form select, .werk-form textarea'), function(el){ el.addEventListener('input', bauen); el.addEventListener('change', bauen); });
+  bauen(); kopierenVerdrahten();
+};
+
+/* ===== 4. Checkliste Inbetriebnahme ===== */
+var CHECK = [
+  {t:'Vorbereitung', p:['Bedarf klären: Wie viele Endpunkte, welche Betriebssysteme, wie lange sollen Alarme durchsuchbar bleiben?','Maschine dimensionieren (Empfehlung: 16 GB RAM, 8 Kerne für rund 100 Endpunkte)','Firewall: 1514, 1515 und 443 vom Netz erreichbar, 9200 und 55000 nur intern','NTP auf Manager und allen Endpunkten prüfen','DNS-Name für den Manager festlegen — nie die IP in die Agenten schreiben']},
+  {t:'Installation', p:['All-in-one-Assistent ausführen: wazuh-install.sh -a','Das einmalig angezeigte admin-Passwort sicher ablegen','Dashboard über HTTPS erreichbar, Zertifikat gegen ein vertrauenswürdiges tauschen','Passwörter aller Standardbenutzer ändern (wazuh-passwords-tool)','Backup der Zertifikate und der ossec.conf anlegen']},
+  {t:'Härtung des Managers', p:['Registrierung mit Passwort absichern: <auth><use_password>yes</use_password></auth>','Wazuh-API nur auf Loopback oder über Reverse Proxy mit TLS','Eigene API-Benutzer mit minimalen Rechten statt wazuh/wazuh-wui','Index-Lebenszyklus festlegen (ISM-Policy), Plattenfüllstand überwachen','Betriebssystem des Managers selbst mit einem Agenten überwachen']},
+  {t:'Agenten-Rollout', p:['Gruppen anlegen (z. B. linux, windows, webserver, datenbank)','agent.conf je Gruppe schreiben und mit verify-agent-conf prüfen','Ersten Agenten manuell installieren und Verbindung prüfen','Installation automatisieren (Ansible, Intune, GPO) mit WAZUH_MANAGER und WAZUH_AGENT_GROUP','Paketquelle nach der Installation deaktivieren oder Paket festhalten','Klone: client.keys vor dem Erstellen eines Images leeren']},
+  {t:'Erkennung einrichten', p:['Logquellen je Gruppe eintragen (Webserver, Auth, Windows Security)','Dateiintegrität auf die Verzeichnisse beschränken, die sich selten ändern dürfen','Schwachstellenerkennung aktivieren und ersten Feed-Abgleich abwarten','SCA-Richtlinien prüfen, nicht anwendbare Prüfpunkte ausnehmen','Regel 504 (Agent getrennt) für wichtige Server höher stufen']},
+  {t:'Reagieren und Benachrichtigen', p:['Benachrichtigung ab Stufe 12 einrichten (E-Mail, Slack, Teams oder Ticketsystem)','Active Response firewall-drop für Brute-Force auf exponierten Diensten','Zuständigkeiten festlegen: Wer liest Alarme, wer eskaliert, wer patcht?','Incident-Playbooks für die häufigsten Alarme hinterlegen']},
+  {t:'Tuning (erste 4 Wochen)', p:['Täglich die häufigsten Alarme prüfen und Fehlalarme mit Stufe 0 abschalten','Regeln für eigene Anwendungen schreiben (local_rules.xml, IDs ab 100000)','CDB-Listen für bekannte Scanner-IPs und erlaubte Administratoren','Nach 4 Wochen: Dashboard-Nutzung prüfen — wird es tatsächlich gelesen?','Aktualisierungsplan: erst Manager, dann Agenten; Versionen dokumentieren']}
+];
+ANSICHT.checkliste = function(){
+  var st=speicherLesen('wazuh-checkliste', {});
+  var s='<div class="panel"><div id="ck-fortschritt"></div><p class="demo-hinweis">Der Stand bleibt in diesem Browser gespeichert. <button type="button" class="weiter" id="ck-reset" style="font-size:12px;padding:3px 8px">Alles zurücksetzen</button></p></div>';
+  CHECK.forEach(function(ph,i){
+    s+='<div class="panel"><h3>'+(i+1)+'. '+ph.t+'</h3>';
+    ph.p.forEach(function(p,j){ var k=i+'-'+j; s+='<label class="ck-punkt"><input type="checkbox" data-ck="'+k+'"'+(st[k]?' checked':'')+'> <span>'+xmlEsc(p)+'</span></label>'; });
+    s+='</div>';
+  });
+  return s;
+};
+NACH.checkliste = function(){
+  var st=speicherLesen('wazuh-checkliste', {}), gesamt=0; CHECK.forEach(function(p){ gesamt+=p.p.length; });
+  function fortschritt(){
+    var n=Object.keys(st).filter(function(k){ return st[k]; }).length, p=Math.round(n/gesamt*100);
+    document.getElementById('ck-fortschritt').innerHTML=zahlen([[n+' / '+gesamt,'Erledigt',p===100?'gruen':'',''],[p+' %','Fortschritt','','']])+
+      '<div class="balken" style="margin-top:6px"><div><span>Gesamt</span><span class="spur"><i style="width:'+p+'%;background:'+(p===100?'var(--ok)':'var(--primary)')+'"></i></span><span class="wert">'+p+'%</span></div></div>';
+  }
+  Array.prototype.forEach.call(haupt.querySelectorAll('[data-ck]'), function(c){
+    c.addEventListener('change', function(){ st[c.getAttribute('data-ck')]=c.checked; speicherSchreiben('wazuh-checkliste', st); fortschritt(); });
+  });
+  document.getElementById('ck-reset').addEventListener('click', function(){ st={}; speicherSchreiben('wazuh-checkliste', st); Array.prototype.forEach.call(haupt.querySelectorAll('[data-ck]'), function(c){ c.checked=false; }); fortschritt(); });
+  fortschritt();
+};
+
+/* ===== 5. Glossar ===== */
+var GLOSSAR = [
+  ['Active Response','Automatische Reaktion des Agenten auf einen Alarm, etwa eine IP per Firewall sperren oder einen Prozess beenden. Welche Regel welches Skript auslöst, steht auf dem Manager.'],
+  ['Agent','Programm auf dem Endpunkt, das Logs sammelt, Dateien überwacht und Inventar meldet. Die Auswertung passiert auf dem Manager.'],
+  ['agent.conf','Zentrale Konfiguration je Agentengruppe auf dem Manager. Wird automatisch an alle Agenten der Gruppe verteilt.'],
+  ['agentenlos','Überwachung ohne installierten Agenten, etwa Firewalls und Switches per Syslog.'],
+  ['analysisd','Manager-Dienst, der Ereignisse gegen Decoder und Regeln prüft und Alarme erzeugt.'],
+  ['CDB-Liste','Nachschlageliste (Constant Database) für Regeln, etwa bekannte schlechte IPs oder erlaubte Benutzer.'],
+  ['CISA KEV','Katalog der US-Behörde CISA mit Schwachstellen, die nachweislich aktiv ausgenutzt werden (Known Exploited Vulnerabilities).'],
+  ['CTI','Cyber Threat Intelligence. Bei Wazuh die Plattform, die den CVE-Bestand für die Schwachstellenerkennung liefert.'],
+  ['CVE','Common Vulnerabilities and Exposures — öffentliche Kennung einer Schwachstelle, z. B. CVE-2024-6387.'],
+  ['CVSS','Common Vulnerability Scoring System — Schweregrad einer Schwachstelle von 0 bis 10. Ab 9,0 gilt sie als kritisch.'],
+  ['Decoder','Zerlegt eine rohe Logzeile in benannte Felder wie srcip oder user. Ohne passenden Decoder greift keine Regel.'],
+  ['EDR','Endpoint Detection and Response. Wazuh erkennt und reagiert per Skript, blockiert aber nicht im Kernel — es ergänzt ein EDR, ersetzt es nicht.'],
+  ['EPSS','Exploit Prediction Scoring System — Wahrscheinlichkeit, dass eine Schwachstelle in den nächsten 30 Tagen ausgenutzt wird.'],
+  ['Filebeat','Liest alerts.json auf dem Manager und schickt die Alarme an den Indexer.'],
+  ['FIM','File Integrity Monitoring — Überwachung von Dateien und Verzeichnissen auf Änderungen. In Wazuh der Block <syscheck>.'],
+  ['Gruppe','Zusammenfassung von Agenten mit gemeinsamer Konfiguration, z. B. webserver oder windows.'],
+  ['Indexer','Datenbank für Alarme und Zustände (OpenSearch-basiert), Port 9200. Grundlage für Suche und Dashboard.'],
+  ['Keepalive','Lebenszeichen des Agenten an den Manager, Standard alle 20 Sekunden (notify_time).'],
+  ['local_internal_options.conf','Interne Schalter des Agenten, etwa Debug-Stufen und die Freigabe entfernter Befehle. Wird bei Updates nie überschrieben.'],
+  ['local_rules.xml','Datei für eigene Regeln, updatefest, IDs ab 100000.'],
+  ['Manager','Zentrale Komponente: nimmt Ereignisse an, bewertet sie, hält den Agentenbestand und löst Reaktionen aus.'],
+  ['MITRE ATT&CK','Katalog von Angriffstaktiken und -techniken. Wazuh ordnet Alarme Techniken wie T1110 (Brute Force) zu.'],
+  ['ossec.conf','Hauptkonfiguration von Manager und Agent. Wazuh ist ein Fork von OSSEC, daher der Name.'],
+  ['remoted','Manager-Dienst, der die Verbindungen der Agenten auf Port 1514 annimmt.'],
+  ['Rootcheck','Suche nach Rootkit-Merkmalen: versteckte Prozesse, Ports ohne Dienst, Netzwerkkarten im Promiscuous-Modus.'],
+  ['SCA','Security Configuration Assessment — Härtungsprüfung gegen Richtlinien wie CIS-Benchmarks.'],
+  ['SIEM','Security Information and Event Management — zentrale Sammlung und Auswertung sicherheitsrelevanter Ereignisse.'],
+  ['Stufe (level)','Schweregrad eines Alarms von 0 bis 15. 0 wird verworfen, ab 12 gilt hohe Priorität.'],
+  ['syscollector','Modul des Agenten, das Hardware, Pakete, Ports, Prozesse und Benutzer inventarisiert.'],
+  ['Vulnerability Detection','Schwachstellenerkennung: Abgleich des Paketinventars mit CVE-Feeds, ohne aktiven Scan.'],
+  ['whodata','Erweiterung der Dateiintegrität, die Benutzer und Prozess einer Änderung erfasst. Braucht auditd (Linux) oder die Windows-Überwachungsrichtlinie.'],
+  ['Wodle','Wazuh-Modul, eingebunden als <wodle name="…">, etwa syscollector, command oder docker-listener.'],
+  ['WPK','Wazuh-Paketformat für signierte Agenten-Updates aus dem Manager heraus.']
+];
+ANSICHT.glossar = function(){
+  return '<div class="panel"><div class="sim-steuer" style="margin:0"><label for="gl-such">Suche</label><input id="gl-such" type="search" class="demo-such" style="width:260px" placeholder="Begriff oder Stichwort"></div></div><div class="panel" id="gl-liste"></div>';
+};
+NACH.glossar = function(){
+  var such=document.getElementById('gl-such'), liste=document.getElementById('gl-liste');
+  function zeichnen(){
+    var q=such.value.trim().toLowerCase();
+    var t=GLOSSAR.filter(function(g){ return !q || (g[0]+' '+g[1]).toLowerCase().indexOf(q)>=0; });
+    liste.innerHTML=t.length?'<dl class="glossar">'+t.map(function(g){ return '<dt>'+xmlEsc(g[0])+'</dt><dd>'+xmlEsc(g[1])+'</dd>'; }).join('')+'</dl>':'<p style="color:var(--muted)">Kein Treffer.</p>';
+  }
+  such.addEventListener('input', zeichnen); zeichnen();
+};
+
+/* ===== 6. Incident-Playbooks ===== */
+var PLAYBOOKS = [
+  {n:'SSH-Brute-Force', ausl:'Regel 5712 oder eigene Korrelationsregel, viele 5760 derselben Quell-IP', st:'s-hoch', stufe:'10',
+   e:['Quell-IP und Zielserver im Alarm ablesen','In Threat Hunting nach data.srcip filtern — greift die IP auch andere Server an?','Prüfen, ob es zwischendurch eine erfolgreiche Anmeldung (5715) von dieser IP gab'],
+   d:['IP sperren: Active Response firewall-drop oder manuell an der Firewall','Bei erfolgreichem Login: betroffenes Konto sperren, Sitzungen beenden'],
+   b:['SSH aus dem Internet nur über VPN oder Freigabeliste','Passwort-Anmeldung abschalten, nur Schlüssel','fail2ban oder dauerhafte Active Response mit repeated_offenders'],
+   n2:['Zeitraum, Quelle, betroffene Konten und Maßnahmen im Ticket festhalten','Regel-Stufe und Sperrdauer bei Bedarf anpassen']},
+  {n:'Webshell im Webverzeichnis', ausl:'FIM-Alarm 554 (neue Datei) plus YARA-Treffer oder eigene Regel', st:'s-krit', stufe:'12',
+   e:['Pfad, Zeitpunkt und (mit whodata) Benutzer und Prozess der Änderung ablesen','Webserver-Logs nach Zugriffen auf die Datei durchsuchen: Wer hat sie aufgerufen, von wo?','Upload-Funktionen der Anwendung als Einfallstor prüfen'],
+   d:['Datei nicht löschen, sondern verschieben und sichern (Beweis)','Server vom Netz nehmen oder zumindest ausgehenden Verkehr sperren','Zugangsdaten der Anwendung und der Datenbank erneuern'],
+   b:['Schwachstelle der Anwendung schließen (Upload-Filter, Update)','Webverzeichnis nur lesbar für den Webserver-Benutzer, Ausführung in Upload-Ordnern verbieten','FIM mit whodata auf das Webverzeichnis'],
+   n2:['Vollständige Zeitleiste vom ersten Zugriff bis zur Bereinigung','Prüfen, ob Daten abgeflossen sind — Meldepflicht nach DSGVO Art. 33 prüfen']},
+  {n:'Ransomware-Verdacht', ausl:'Massenhaft FIM-Alarme 550/553 in kurzer Zeit, neue Dateiendungen, Löschung von Schattenkopien', st:'s-krit', stufe:'14',
+   e:['Betroffene Agenten anhand der FIM-Alarme eingrenzen','Prozess und Benutzer aus whodata ablesen','Freigaben und Netzlaufwerke prüfen — läuft es schon auf mehreren Systemen?'],
+   d:['Betroffene Rechter sofort vom Netz (LAN-Kabel, WLAN aus, VLAN sperren)','Betroffene Benutzerkonten deaktivieren','Backups vor Zugriff schützen: Verbindungen zum Backup-Server kappen'],
+   b:['Systeme neu aufsetzen, nicht säubern','Wiederherstellung aus Backup, das vor dem Vorfall liegt — vorher auf Befall prüfen','Einfallstor schließen: meist Phishing, offenes RDP oder eine ungepatchte Lücke'],
+   n2:['Vorfall nach BSI-Vorgaben und DSGVO bewerten und melden','Kein Lösegeld ohne Rücksprache mit Rechtsabteilung und Polizei (ZAC)']},
+  {n:'Agent verstummt', ausl:'Regel 504 „Wazuh agent disconnected“', st:'s-warn', stufe:'3',
+   e:['Ist der Server erreichbar (ping, SSH)?','Läuft der Dienst? systemctl status wazuh-agent','Letzte Ereignisse des Agenten vor dem Abbruch ansehen — gab es vorher etwas Auffälliges?'],
+   d:['Bei Verdacht auf absichtliches Stoppen: Server isolieren und Anmeldungen der letzten Stunde prüfen','Sonst Dienst neu starten und ossec.log lesen'],
+   b:['Ursache beheben: Netzwerk, volle Platte, abgelaufener Schlüssel nach Neuinstallation','Bei Klon-Problemen client.keys bereinigen und neu registrieren'],
+   n2:['Für wichtige Server die Stufe von 504 in local_rules.xml anheben, damit eine Benachrichtigung rausgeht']},
+  {n:'Kritische Schwachstelle gemeldet', ausl:'Vulnerability Detection meldet CVE mit CVSS ≥ 9 oder KEV-Eintrag', st:'s-hoch', stufe:'10–13',
+   e:['Betroffene Agenten und Paketversionen im Modul Vulnerability Detection ablesen','Einordnen: aktiv ausgenutzt? Dienst aus dem Internet erreichbar?','Hersteller-Advisory lesen: Gibt es eine Übergangslösung?'],
+   d:['Bei KEV und exponiertem Dienst: Dienst vorübergehend abschalten oder Zugriff einschränken','Übergangslösung setzen, falls Patch nicht sofort möglich'],
+   b:['Paket aktualisieren, Dienste neu starten, bei Kernel und glibc neu booten','Nach dem nächsten Inventarlauf prüfen, ob der Eintrag verschwunden ist'],
+   n2:['Fristen: KEV und erreichbar 48 h, kritisch 7 Tage, hoch 30 Tage','Nicht behebbare Funde mit Begründung und Ablaufdatum dokumentieren']},
+  {n:'Verdächtige Rechteausweitung', ausl:'sudo zu root auf einem Arbeitsplatz (5402), neuer Benutzer in Administratorengruppe (Windows 4732), rootcheck-Fund', st:'s-hoch', stufe:'7–12',
+   e:['Wer, wann, auf welchem System, mit welchem Befehl?','Passt das zu einer geplanten Wartung oder einem Ticket?','Weitere Aktivität des Kontos in Threat Hunting prüfen'],
+   d:['Bei unbekanntem Anlass: Konto sperren, Sitzung beenden','Neu angelegte Benutzer und Gruppenmitgliedschaften zurücknehmen'],
+   b:['Ursache klären: gestohlene Zugangsdaten, lokale Schwachstelle, Innentäter','Betroffenes System auf Persistenz prüfen (Cron, Dienste, Autostart)'],
+   n2:['Für Arbeitsplätze eigene Regel: sudo/Admin-Beitritt auf Stufe 10 heben','Vier-Augen-Prinzip für Administratorrechte festhalten']}
+];
+ANSICHT.playbooks = function(){
+  var zeilen=[];
+  PLAYBOOKS.forEach(function(p,i){
+    zeilen.push('<tr class="klick" tabindex="0" data-detail="pb'+i+'"><td><b>'+p.n+'</b></td><td style="color:var(--muted)">'+p.ausl+'</td><td><span class="stufe '+p.st+'">'+p.stufe+'</span></td></tr>');
+    function liste(t, l){ return '<div><h4>'+t+'</h4><ol class="massn">'+l.map(function(x){ return '<li>'+x+'</li>'; }).join('')+'</ol></div>'; }
+    zeilen.push('<tr class="detail" id="pb'+i+'" hidden><td colspan="3"><div class="detail-inhalt pb">'+liste('1 · Erkennen und einordnen',p.e)+liste('2 · Eindämmen',p.d)+liste('3 · Beheben',p.b)+liste('4 · Dokumentieren und lernen',p.n2)+'</div></td></tr>');
+  });
+  return '<div class="panel"><p>Feste Abläufe für die häufigsten Alarme, jeweils in vier Schritten: Erkennen, Eindämmen, Beheben, Dokumentieren. Zeile anklicken.</p>'+
+    tabelle([['Vorfall',''],['Auslöser in Wazuh',''],['Stufe','']], zeilen)+'</div>'+
+    '<div class="panel"><h3>Grundregeln für jeden Vorfall</h3><ul style="margin:0;padding-left:17px;font-size:13.5px">'+
+    '<li style="margin-bottom:7px"><b>Erst Beweise sichern, dann aufräumen.</b> Ein gelöschter Alarm oder eine gelöschte Datei ist nicht mehr auswertbar.</li>'+
+    '<li style="margin-bottom:7px"><b>Zeitleiste führen.</b> Wann erkannt, wann gehandelt, wer entschieden — das ist später die wichtigste Unterlage.</li>'+
+    '<li style="margin-bottom:7px"><b>Kommunikation festlegen.</b> Wer informiert Leitung, Datenschutz und gegebenenfalls Behörden?</li>'+
+    '<li><b>Nachbereitung einplanen.</b> Jeder Vorfall verbessert Regeln, Playbooks und Checkliste.</li></ul></div>';
+};
+
+/* ===== 7. Vergleich ===== */
+ANSICHT.vergleich = function(){
+  var K=[['Lizenz','Open Source (GPLv2), voller Umfang','Kommerziell, nach Datenvolumen pro Tag','Basis frei, Security-Funktionen in bezahlten Stufen','Kommerziell, nach aufgenommenen Daten (GB)'],
+         ['Kosten','Hardware und Betrieb','hoch, wächst mit dem Logvolumen','mittel bis hoch','nutzungsabhängig, Cloud-Abrechnung'],
+         ['Betrieb','selbst gehostet oder Wazuh Cloud','selbst gehostet oder Cloud','selbst gehostet oder Elastic Cloud','nur Microsoft Azure'],
+         ['Agent','eigener Agent für Linux, Windows, macOS, AIX, Solaris','Universal Forwarder','Elastic Agent','Azure Monitor Agent, Konnektoren'],
+         ['Dateiintegrität','eingebaut','über Add-ons','eingebaut (Elastic Defend)','über Defender for Endpoint'],
+         ['Schwachstellen','eingebaut, ohne Netzscan','über Add-ons oder Drittprodukte','eingebaut (Elastic Defend)','über Defender'],
+         ['Härtungsprüfung','eingebaut (SCA, CIS)','über Add-ons','eingeschränkt','über Defender / Purview'],
+         ['Suchsprache','OpenSearch DQL / Lucene','SPL (sehr mächtig)','KQL / ES|QL','KQL'],
+         ['Reaktion','Active Response per Skript','Playbooks über SOAR (Zusatzprodukt)','Elastic Defend blockiert im Kernel','Playbooks über Logic Apps'],
+         ['Stärke','Preis, Umfang aus einer Hand, ältere Systeme','Analyse und Skalierung','Suche und Geschwindigkeit','Integration in Microsoft-Umgebungen'],
+         ['Schwäche','Fehlalarme anfangs, Indexer-Pflege','Preis','Lizenzmodell unübersichtlich','Bindung an Azure'],
+         ['Passt für','KMU, Behörden, MSSPs, Labor','große Unternehmen mit Budget','Teams mit Elastic-Erfahrung','Microsoft-365-Umgebungen']];
+  return '<div class="panel"><h3>Wazuh im Vergleich</h3>'+
+    tabelle([['',''],['Wazuh',''],['Splunk Enterprise Security',''],['Elastic Security',''],['Microsoft Sentinel','']],
+      K.map(function(r){ return '<tr><td style="color:var(--muted);white-space:nowrap">'+r[0]+'</td><td><b>'+r[1]+'</b></td><td>'+r[2]+'</td><td>'+r[3]+'</td><td>'+r[4]+'</td></tr>'; }))+
+    '<p style="margin-top:12px;color:var(--muted);font-size:13px">Stand September 2026, aus Sicht eines Administrators. Preise und Lizenzmodelle ändern sich; vor einer Entscheidung die aktuellen Angebote prüfen.</p></div>'+
+    '<div class="panel"><h3>Wann Wazuh die richtige Wahl ist</h3><ul style="margin:0;padding-left:17px;font-size:13.5px">'+
+    '<li style="margin-bottom:7px">Das Budget für Lizenzen ist klein, Personal für Betrieb und Tuning ist vorhanden.</li>'+
+    '<li style="margin-bottom:7px">SIEM, Dateiintegrität, Schwachstellen und Härtung sollen aus einer Installation kommen.</li>'+
+    '<li style="margin-bottom:7px">Es gibt ältere Systeme, die moderne EDR-Produkte nicht mehr unterstützen.</li>'+
+    '<li>Daten dürfen das eigene Rechenzentrum nicht verlassen.</li></ul></div>'+
+    '<div class="panel"><h3>Wann eher nicht</h3><ul style="margin:0;padding-left:17px;font-size:13.5px">'+
+    '<li style="margin-bottom:7px">Niemand kann sich um Regel-Tuning und Indexer-Pflege kümmern.</li>'+
+    '<li style="margin-bottom:7px">Es wird ein EDR mit Verhaltensblockade im Kernel gebraucht — dann Wazuh als Ergänzung, nicht als Ersatz.</li>'+
+    '<li>Die Umgebung ist fast vollständig Microsoft 365 und Azure — dort ist Sentinel meist der kürzere Weg.</li></ul></div>';
+};
+
+/* ===== 8. Druckansicht ===== */
+ANSICHT.druck = function(){
+  function t(kopf, zeilen){ return tabelle(kopf.map(function(k){ return [k,'']; }), zeilen.map(function(r){ return '<tr>'+r.map(function(c,i){ return '<td'+(i===0?' class="mono"':'')+'>'+c+'</td>'; }).join('')+'</tr>'; })); }
+  return '<div class="panel druck-nicht"><div class="sim-steuer" style="margin:0"><button type="button" id="druck-start" class="primaer" style="min-width:140px">Drucken / als PDF sichern</button><span style="font-size:12.5px;color:var(--muted)">Im Druckdialog „Als PDF sichern“ wählen. Kopfzeile, Seitenleiste und Einleitung werden ausgeblendet.</span></div></div>'+
+    '<div class="druck-blatt">'+
+    '<div class="panel"><h3>Wazuh 4.14 — Handout für Administratoren</h3><p style="font-size:13px;color:var(--muted)">wazuh.cyqore.de · Ein kostenloser Service von CYQORE · Markus Schoening</p></div>'+
+    '<div class="panel"><h3>Ports</h3>'+t(['Port','Protokoll','Richtung','Zweck'],[['1514','TCP/UDP','Agent → Manager','Ereignisse, AES-256'],['1515','TCP','Agent → Manager','Registrierung, einmalig'],['1516','TCP','Manager ↔ Manager','Cluster'],['9200','TCP','Filebeat, Dashboard → Indexer','REST-API des Indexers'],['9300','TCP','Indexer ↔ Indexer','Cluster'],['55000','TCP','Dashboard, Skripte → Manager','Wazuh-API'],['443','TCP','Browser → Dashboard','Weboberfläche']])+'</div>'+
+    '<div class="panel"><h3>Wichtige Pfade</h3>'+t(['Pfad','Inhalt'],[['/var/ossec/etc/ossec.conf','Hauptkonfiguration von Manager und Agent'],['/var/ossec/etc/shared/&lt;gruppe&gt;/agent.conf','Zentrale Konfiguration je Gruppe'],['/var/ossec/etc/local_internal_options.conf','Interne Schalter, updatefest'],['/var/ossec/etc/rules/local_rules.xml','Eigene Regeln, IDs ab 100000'],['/var/ossec/etc/decoders/local_decoder.xml','Eigene Decoder'],['/var/ossec/logs/alerts/alerts.json','Alarme als JSON'],['/var/ossec/logs/ossec.log','Betriebslog, erste Anlaufstelle'],['/var/ossec/bin/wazuh-logtest','Regeln gegen eine Logzeile prüfen'],['C:\\Program Files (x86)\\ossec-agent\\','Agent unter Windows']])+'</div>'+
+    '<div class="panel"><h3>Scan-Intervalle</h3>'+t(['Funktion','Option','Standard','Minimum','Fester Zeitpunkt'],[['Dateiintegrität','syscheck/frequency','43200 s (12 h)','1 s','scan_time, scan_day'],['Rootcheck','rootcheck/frequency','43200 s (12 h)','1 s','—'],['Härtungsprüfung','sca/interval','12h','1 s','day, wday, time'],['Inventar','syscollector/interval','1h','60 s','—'],['Befehle','wodle command/interval','—','1 s','day, wday, time'],['Keepalive','client/notify_time','20 s','1 s','—'],['Puffer Senderate','client_buffer/events_per_second','500','1','max. 1000'],['Puffer Größe','client_buffer/queue_size','5000','1','max. 100000']])+'</div>'+
+    '<div class="panel"><h3>Alarmstufen</h3>'+t(['Stufe','Bedeutung','Umgang'],[['0','wird verworfen','Fehlalarme abschalten'],['1–3','Information','Rauschen, nur zur Suche'],['4–6','Auffällig','bei Häufung prüfen'],['7–11','Wichtig','prüfen'],['12–15','Hoch','Benachrichtigung und Active Response']])+'</div>'+
+    '<div class="panel"><h3>Befehle für den Alltag</h3>'+t(['Befehl','Wo','Wofür'],[['agent_control -l','Manager','Alle Agenten mit Status'],['agent_control -R -u 001','Manager','Agenten neu starten'],['agent_groups -a -i 001 -g webserver','Manager','Gruppe zuweisen'],['manage_agents -r 001','Manager','Agenten entfernen'],['verify-agent-conf','Manager','agent.conf prüfen'],['wazuh-logtest','Manager','Regel testen'],['systemctl restart wazuh-agent','Agent','nach lokaler Änderung'],['wazuh-control status','Agent','Dienste prüfen'],['tail -f /var/ossec/logs/ossec.log','Agent','Fehlersuche']])+'</div>'+
+    '<div class="panel"><h3>Schwachstellen abarbeiten</h3>'+t(['Einstufung','Frist','Kriterium'],[['Aktiv ausgenutzt und erreichbar','48 Stunden','CISA-KEV-Eintrag, Dienst aus dem Internet erreichbar'],['Kritisch','7 Tage','CVSS 9,0–10,0'],['Hoch','30 Tage','CVSS 7,0–8,9'],['Übrige','Wartungsfenster','—']])+'</div>'+
+    '<div class="panel"><h3>Installation in drei Zeilen</h3><pre class="hell">curl -sO https://packages.wazuh.com/4.14/wazuh-install.sh\nsudo bash ./wazuh-install.sh -a\n# Agent:\nWAZUH_MANAGER="wazuh.example.de" WAZUH_AGENT_GROUP="linux" apt-get install wazuh-agent</pre></div>'+
+    '</div>';
+};
+NACH.druck = function(){
+  document.body.classList.add('druck-modus');
+  document.getElementById('druck-start').addEventListener('click', function(){ window.print(); });
+  return function(){ document.body.classList.remove('druck-modus'); };
+};
 
 /* ---------- Seitenleiste ---------- */
 var seite=document.getElementById('seite'), haupt=document.getElementById('haupt'),
