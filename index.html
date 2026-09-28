@@ -497,6 +497,7 @@ code{font-family:var(--m); font-size:.88em; color:var(--primary); background:var
     <a class="sprung" href="#geruest">Zum Nachbau des Dashboards ↓</a>
     <a class="sprung" href="#geruest" data-go="live" style="margin-left:8px">Live-Betrieb ansehen ›</a>
     <a class="sprung" href="#geruest" data-go="demo" style="margin-left:8px">Demo-Dashboard öffnen ›</a>
+    <a class="sprung" href="#geruest" data-go="qonfirm" style="margin-left:8px">An Audit-Tool QONFIRM übertragen ›</a>
   </div>
 </section>
 
@@ -2359,7 +2360,7 @@ ANSICHT.qonfirm = function(){
       '<label>Auditor-ID<input id="qf-auditor" type="text" class="werk-input" placeholder="z. B. MSC" value="'+xmlEsc(meta.auditor||'')+'"></label>'+
       '<label>Auditor (Name)<input id="qf-name" type="text" class="werk-input" value="'+xmlEsc(meta.name||'')+'"></label>'+
       '<label>Mandant / System<input id="qf-mandant" type="text" class="werk-input" placeholder="z. B. BwK KO" value="'+xmlEsc(meta.mandant||'')+'"></label>'+
-      '<label>QONFIRM-Endpunkt (optional)<input id="qf-url" type="url" class="werk-input" placeholder="https://qonfirm.de/api/import" value="'+xmlEsc(meta.url||'')+'"></label>'+
+      '<label>QONFIRM-Endpunkt (optional)<input id="qf-url" type="url" class="werk-input" placeholder="https://qonfirm.de/api/v1/import/wazuh" value="'+xmlEsc(meta.url||'')+'"></label>'+
       '<label class="werk-breit">Anmerkung zum Export<input id="qf-notiz" type="text" class="werk-input" value="'+xmlEsc(meta.notiz||'')+'"></label>'+
     '</div></div>'+
     '<div class="panel"><h3>Befunde <span style="font-weight:400;color:var(--muted)">— abwählen, was nicht exportiert werden soll</span></h3>'+
@@ -2388,7 +2389,7 @@ NACH.qonfirm = function(){
     return qfPaket(G, m).then(function(p){
       paket=p;
       $('qf-zusammen').innerHTML=zahlen([[String(p.summary.total),'Befunde','',''],[String(p.summary.critical),'Kritisch','rot',''],[String(p.summary.high),'Hoch','orange',''],[String(p.summary.exploited),'Aktiv ausgenutzt','rot','']])+
-        '<p style="font-size:12.5px;color:var(--muted)">Manifest-Prüfsumme: <code>'+(p.manifest_sha256||'— (nur über HTTPS verfügbar)')+'</code></p>';
+        '<p style="font-size:12.5px;color:var(--muted)">Manifest-Prüfsumme: <code style="overflow-wrap:anywhere">'+(p.manifest_sha256||'— (nur über HTTPS verfügbar)')+'</code></p>';
       $('qf-vorschau').textContent=JSON.stringify(p,null,2);
       $('qf-json').disabled=$('qf-csv').disabled=$('qf-kopie').disabled=$('qf-senden').disabled=(G.length===0);
       $('qf-senden').textContent=m.url?'An QONFIRM senden':'An QONFIRM senden (Endpunkt fehlt)';
