@@ -292,6 +292,9 @@ textarea.werk-input{font-family:var(--m); font-size:11.5px; resize:vertical}
   body.druck-modus .haupt{padding:0} body.druck-modus .panel{break-inside:avoid; box-shadow:none; border:1px solid #bbb}
   body.druck-modus{background:#fff; color:#000}
 }
+body.demo-voll .seite, body.demo-voll .intro, body.demo-voll .band, body.demo-voll .fuss, body.demo-voll .titel{display:none !important}
+body.demo-voll .haupt{padding:14px 20px 30px}
+body.demo-voll .zahlen{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
 /* Aufgeklappte Zeile */
 tr.detail > td{background:var(--detail); padding:0; border-bottom:1px solid var(--line)}
 .detail-inhalt{display:grid; grid-template-columns:repeat(auto-fit,minmax(238px,1fr)); gap:16px; padding:15px 14px}
@@ -1764,6 +1767,7 @@ ANSICHT.demo = function(){
       '<label for="dm-st">Stufe</label><select id="dm-st"><option value="0">Alle</option><option value="4">ab 4</option><option value="7">ab 7</option><option value="12">ab 12</option></select>'+
       '<label for="dm-su">Suche</label><input id="dm-su" type="search" placeholder="Regel, IP, Benutzer …" class="demo-such">'+
       '<button type="button" id="dm-live" class="primaer">Pause</button>'+
+      '<button type="button" id="dm-voll" title="Seitenleiste und Einleitung ausblenden, Dashboard im Vollbild zeigen">Vollbild</button>'+
     '</div><p class="demo-hinweis" id="dm-status" aria-live="polite"></p></div>'+
     '<div id="dm-inhalt"></div>';
 };
@@ -1826,9 +1830,23 @@ NACH.demo = function(){
   knopf.addEventListener('click', function(){ S.live=!S.live; knopfText(); zeichnen(); });
   /* Bei geöffneter Detailzeile den Live-Zulauf anhalten, damit nichts wegspringt */
   $('dm-inhalt').addEventListener('click', function(e){ var z=e.target.closest&&e.target.closest('tr.klick'); if(z && S.live){ S.live=false; knopfText(); $('dm-status').textContent='Angehalten, damit die geöffnete Zeile stehen bleibt. Mit „Live starten“ geht es weiter.'; } });
+  /* Vollbild: Seitenleiste, Einleitung und Fußbereich ausblenden, Browser-Vollbild anfordern */
+  var voll=$('dm-voll');
+  function vollAn(){ return document.body.classList.contains('demo-voll'); }
+  function vollSetzen(an){
+    document.body.classList.toggle('demo-voll', an);
+    voll.textContent=an?'Vollbild beenden':'Vollbild';
+    if(an){ if(document.documentElement.requestFullscreen && !document.fullscreenElement){ try{ document.documentElement.requestFullscreen().catch(function(){}); }catch(e){} } var g=document.getElementById('geruest'); if(g) g.scrollIntoView({block:'start'}); }
+    else if(document.fullscreenElement && document.exitFullscreen){ try{ document.exitFullscreen().catch(function(){}); }catch(e){} }
+  }
+  voll.addEventListener('click', function(){ vollSetzen(!vollAn()); });
+  function fsWechsel(){ if(!document.fullscreenElement && vollAn()) vollSetzen(false); }
+  document.addEventListener('fullscreenchange', fsWechsel);
+  document.addEventListener('keydown', escVoll);
+  function escVoll(e){ if(e.key==='Escape' && vollAn() && !document.fullscreenElement) vollSetzen(false); }
   knopfText(); zeichnen();
   S.timer=setInterval(tick, 3000);
-  return function(){ clearInterval(S.timer); };
+  return function(){ clearInterval(S.timer); document.removeEventListener('fullscreenchange', fsWechsel); document.removeEventListener('keydown', escVoll); if(vollAn()) vollSetzen(false); };
 };
 
 function demoRat(e){
