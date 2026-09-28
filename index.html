@@ -130,6 +130,7 @@ h1,h2,h3,h4{margin:0; font-weight:600; color:var(--head); letter-spacing:-.01em}
 .intro-grid li::marker{color:var(--primary)}
 .intro-grid li b{font-weight:600; color:var(--head)}
 .intro-grid a{font-weight:500}
+.intro-grid h3.abschnitt{margin-top:18px; padding-top:14px; border-top:1px solid var(--line-soft)}
 .intro-grid .url{font-family:var(--m); font-size:11.5px; color:var(--muted); display:block; margin-top:1px}
 .intro .sprung{
   display:inline-block; margin-top:20px; font-size:13px; font-weight:600; color:var(--primary);
@@ -255,6 +256,13 @@ tr.offen{background:var(--primary-bg)}
 .felder.opt{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr)}
 .felder.opt dt{white-space:normal; overflow-wrap:anywhere}
 .felder.opt dd{word-break:normal; overflow-wrap:anywhere}
+.detail-inhalt.cve{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.cve-text{margin:0; font-size:13px; line-height:1.55; color:var(--text)}
+.massn{margin:0; padding-left:20px; font-size:13px; line-height:1.5}
+.massn li{margin-bottom:8px}
+.massn li b{display:block; color:var(--head); font-size:12px}
+.massn.gross{font-size:13.5px}
+.cve-links{margin:10px 0 0; font-size:12px}
 /* Aufgeklappte Zeile */
 tr.detail > td{background:var(--detail); padding:0; border-bottom:1px solid var(--line)}
 .detail-inhalt{display:grid; grid-template-columns:repeat(auto-fit,minmax(238px,1fr)); gap:16px; padding:15px 14px}
@@ -446,6 +454,10 @@ code{font-family:var(--m); font-size:.88em; color:var(--primary); background:var
           <li><a href="https://github.com/wazuh/wazuh-docker" target="_blank" rel="noopener">Docker-Images</a><span class="url">github.com/wazuh/wazuh-docker</span></li>
           <li><a href="https://wazuh.com/community/" target="_blank" rel="noopener">Community</a><span class="url">Slack, Google Group, Forum — wazuh.com/community</span></li>
           <li><a href="https://wazuh.com/cloud/" target="_blank" rel="noopener">Wazuh Cloud</a><span class="url">gehostete Variante, kostenpflichtig — wazuh.com/cloud</span></li>
+        </ul>
+        <h3 class="abschnitt">Teamleiter Technik ZCSBw</h3>
+        <ul>
+          <li><b>OSF Sören Wiebe</b></li>
         </ul>
       </div>
     </div>
@@ -953,16 +965,99 @@ fim:function(){
 },
 
 vuln:function(){
-  return zahlen([['4','Offene Schwachstellen','',''],['1','Kritisch','rot',''],['3','Hoch','orange',''],['44','Geprüfte Endpunkte','','']])+
-    '<div class="panel"><h3>Erkannte Schwachstellen im Paketbestand</h3>'+
-    tabelle([['CVE',''],['Paket',''],['Installiert',''],['Behoben in','Version, ab der die Lücke geschlossen ist'],['Schwere',''],['Agent','']],
-      [['CVE-2024-3094','xz-utils','5.6.0','5.6.2','s-krit','Kritisch','srv-web-01'],
-       ['CVE-2024-6387','openssh-server','9.2p1-2','9.2p1-2+deb12u3','s-hoch','Hoch','srv-db-02'],
-       ['CVE-2023-4863','libwebp','1.2.4','1.2.4-0.2+deb12u1','s-hoch','Hoch','ws-buchhaltung-07'],
-       ['CVE-2022-0847','linux-image','5.16.10','5.16.11','s-hoch','Hoch','srv-mail-01']
-      ].map(function(r){ return '<tr><td class="mono">'+r[0]+'</td><td>'+r[1]+'</td><td class="mono">'+r[2]+'</td><td class="mono">'+r[3]+
-        '</td><td><span class="stufe '+r[4]+'">'+r[5]+'</span></td><td class="agent">'+r[6]+'</td></tr>'; }))+
-    '<p style="margin-top:12px;color:var(--muted);font-size:13px">Ermittelt aus dem gemeldeten Paketbestand, nicht durch einen aktiven Scan. Kein Netzverkehr zum Endpunkt, dafür nur so genau wie die Paketverwaltung.</p></div>';
+  var CV = [
+   {id:'CVE-2024-3094', name:'xz-Hintertür', paket:'xz-utils / liblzma5', inst:'5.6.1-1', fix:'5.6.1+really5.4.5-1', k:'s-krit', st:'Kritisch', cvss:'10.0', agent:'ws-dev-03', os:'Debian testing', kev:false,
+    was:'Absichtlich eingeschleuste Hintertür in den Release-Archiven von xz 5.6.0 und 5.6.1. Über <code>liblzma</code>, das auf manchen Distributionen per systemd in <code>sshd</code> geladen wird, konnte der Angreifer vor der Anmeldung Code ausführen. Betroffen waren vor allem Test- und Rolling-Distributionen wie Debian testing/unstable, Fedora Rawhide und openSUSE Tumbleweed.',
+    vektor:'Netzwerk, ohne Anmeldung — nur mit dem privaten Schlüssel des Angreifers',
+    m:[['Sofort','Version prüfen: <code>xz --version</code>. War <code>sshd</code> aus dem Internet erreichbar, das System als möglicherweise kompromittiert behandeln.'],
+       ['Beheben','<code>apt update &amp;&amp; apt install --only-upgrade xz-utils liblzma5</code> — Debian liefert unter der Versionsnummer <code>5.6.1+really5.4.5</code> den sauberen Stand 5.4.5 aus.'],
+       ['Nacharbeiten','<code>sshd</code> neu starten, Anmeldungen im betroffenen Zeitraum prüfen, SSH-Host- und Benutzerschlüssel erneuern. Im Zweifel neu aufsetzen.'],
+       ['Prüfen','Nach dem nächsten Inventarlauf (Standard 1 h) verschwindet der Eintrag aus der Liste.']]},
+   {id:'CVE-2021-44228', name:'Log4Shell', paket:'liblog4j2-java', inst:'2.14.1-1', fix:'2.17.1-1', k:'s-krit', st:'Kritisch', cvss:'10.0', agent:'srv-app-04', os:'Debian 11', kev:true,
+    was:'Die Java-Logbibliothek Log4j 2 wertet in Logmeldungen Ausdrücke wie <code>$'+'{jndi:ldap://…}</code> aus und lädt dabei Code von einem fremden Server nach. Es reicht, dass die Anwendung eine vom Angreifer kontrollierte Zeichenkette protokolliert — etwa einen User-Agent oder Benutzernamen.',
+    vektor:'Netzwerk, ohne Anmeldung, geringe Komplexität',
+    m:[['Sofort','Von außen erreichbare Java-Anwendungen ermitteln. Ausgehende Verbindungen der Server auf LDAP, RMI und DNS beschränken.'],
+       ['Beheben','Log4j auf mindestens <code>2.17.1</code> aktualisieren (Java 8), Anwendung neu starten.'],
+       ['Übergangslösung','Wenn kein Update möglich ist: <code>zip -q -d log4j-core-*.jar org/apache/logging/log4j/core/lookup/JndiLookup.class</code>'],
+       ['Achtung','Wazuh sieht nur Pakete aus der Paketverwaltung. In Anwendungen eingebettete JAR-Dateien zusätzlich suchen: <code>find / -name "log4j-core-*.jar" 2&gt;/dev/null</code>'],
+       ['Prüfen','Webserver-Logs in Threat Hunting nach <code>jndi:</code> durchsuchen — Treffer zeigen, ob es Angriffsversuche gab.']]},
+   {id:'CVE-2024-21413', name:'Outlook „MonikerLink“', paket:'Microsoft 365 Apps (Outlook)', inst:'Stand Januar 2024', fix:'Update vom 13.02.2024', k:'s-krit', st:'Kritisch', cvss:'9.8', agent:'ws-buchhaltung-07', os:'Windows 11', kev:false,
+    was:'Links der Form <code>file:///\\\\server\\datei!irgendwas</code> umgehen die geschützte Ansicht von Outlook. Schon das Anklicken schickt den NTLM-Hash des Benutzers an den Angreifer und kann Code ausführen.',
+    vektor:'Netzwerk, ohne Anmeldung — der Benutzer muss den Link anklicken',
+    m:[['Sofort','Ausgehendes SMB (Port 445) an der Firewall ins Internet sperren — das nimmt dem Angriff die Grundlage.'],
+       ['Beheben','Office aktualisieren: Datei › Office-Konto › Updateoptionen › Jetzt aktualisieren, oder zentral über Intune/WSUS verteilen.'],
+       ['Nacharbeiten','Bei Verdacht das Passwort des Benutzers ändern — ein abgegriffener NTLM-Hash lässt sich offline knacken oder weiterreichen.'],
+       ['Prüfen','Wazuh liest installierte Programme und Hotfixes unter Windows über syscollector. <code>hotfixes</code> und <code>packages</code> müssen aktiv sein.']]},
+   {id:'CVE-2023-4863', name:'libwebp Heap-Überlauf', paket:'Google Chrome', inst:'116.0.5845.141', fix:'116.0.5845.187', k:'s-hoch', st:'Hoch', cvss:'8.8', agent:'ws-buchhaltung-07', os:'Windows 11', kev:true,
+    was:'Pufferüberlauf beim Dekodieren präparierter WebP-Bilder in der Bibliothek libwebp. Ein manipuliertes Bild auf einer Webseite oder in einer Nachricht genügt. Die Lücke wurde vor dem Patch aktiv ausgenutzt.',
+    vektor:'Netzwerk, ohne Anmeldung — der Benutzer muss eine Seite oder Nachricht öffnen',
+    m:[['Sofort','Browser auf allen Arbeitsplätzen aktualisieren und neu starten — der Patch greift erst nach dem Neustart.'],
+       ['Beheben','Auch Programme mit eingebautem Chromium oder libwebp aktualisieren: Firefox, Edge und Electron-Anwendungen wie Teams, Slack oder Signal. Unter Linux das Paket <code>libwebp7</code>.'],
+       ['Prüfen','Nach dem Update ein Inventarlauf abwarten. Bleibt der Eintrag, läuft noch eine alte Version parallel — etwa eine portable Installation.']]},
+   {id:'CVE-2024-6387', name:'regreSSHion', paket:'openssh-server', inst:'1:9.2p1-2+deb12u2', fix:'1:9.2p1-2+deb12u3', k:'s-hoch', st:'Hoch', cvss:'8.1', agent:'srv-db-02', os:'Debian 12', kev:false,
+    was:'Race Condition im Signal-Handler von <code>sshd</code>, der beim Ablauf von <code>LoginGraceTime</code> auslöst. Auf Linux mit glibc erlaubt sie Codeausführung als root ohne Anmeldung. Betroffen sind OpenSSH 8.5p1 bis 9.7p1. Die Ausnutzung braucht viele Tausend Versuche über Stunden.',
+    vektor:'Netzwerk, ohne Anmeldung, hohe Komplexität',
+    m:[['Sofort','SSH nicht offen ins Internet stellen: nur über VPN oder eine Freigabeliste erreichbar machen.'],
+       ['Beheben','<code>apt update &amp;&amp; apt install --only-upgrade openssh-server</code>, danach <code>systemctl restart ssh</code>.'],
+       ['Übergangslösung','<code>LoginGraceTime 0</code> in <code>/etc/ssh/sshd_config</code> — schließt die Lücke, macht den Dienst aber anfälliger für Überlastung über <code>MaxStartups</code>.'],
+       ['Erkennen','Die vielen abgebrochenen Verbindungen erzeugen sshd-Alarme. Active Response mit <code>firewall-drop</code> bremst den Angriff zusätzlich.']]},
+   {id:'CVE-2023-4911', name:'Looney Tunables', paket:'libc6 (glibc)', inst:'2.35-0ubuntu3.3', fix:'2.35-0ubuntu3.4', k:'s-hoch', st:'Hoch', cvss:'7.8', agent:'srv-files-02', os:'Ubuntu 22.04', kev:true,
+    was:'Pufferüberlauf im dynamischen Lader <code>ld.so</code> beim Auswerten der Umgebungsvariable <code>GLIBC_TUNABLES</code>. Ein angemeldeter Benutzer ohne Rechte wird damit über ein SUID-Programm zu root. Betroffen sind glibc 2.34 bis 2.38.',
+    vektor:'Lokal, angemeldeter Benutzer ohne besondere Rechte',
+    m:[['Beheben','<code>apt update &amp;&amp; apt install --only-upgrade libc6</code>'],
+       ['Neustart','glibc steckt in jedem laufenden Prozess. Nach dem Update alle Dienste neu starten (<code>needrestart</code>) oder den Server neu booten.'],
+       ['Priorität','Besonders dringend auf Mehrbenutzersystemen und überall, wo ein Angreifer schon eine Shell haben könnte — etwa nach einer Webshell.'],
+       ['Prüfen','<code>ldd --version</code> zeigt die geladene Version nicht exakt — maßgeblich ist die Paketversion, die Wazuh meldet.']]},
+   {id:'CVE-2022-0847', name:'Dirty Pipe', paket:'linux-image', inst:'5.16.10', fix:'5.16.11', k:'s-hoch', st:'Hoch', cvss:'7.8', agent:'srv-mail-01', os:'Ubuntu', kev:true,
+    was:'Fehler in der Pipe-Verwaltung des Linux-Kernels ab 5.8: Ein Benutzer ohne Rechte kann Daten in eigentlich schreibgeschützte Dateien schreiben — etwa in <code>/etc/passwd</code> oder SUID-Programme — und wird so root.',
+    vektor:'Lokal, angemeldeter Benutzer ohne besondere Rechte',
+    m:[['Beheben','Kernel aktualisieren: behoben in 5.16.11, 5.15.25 und 5.10.102.'],
+       ['Neustart','Der neue Kernel wirkt erst nach dem Neustart. <code>uname -r</code> zeigt, welcher Kernel tatsächlich läuft.'],
+       ['Alternative','Wo kein Neustart möglich ist: Livepatch des Distributors, falls vorhanden.'],
+       ['Prüfen','Wazuh meldet den installierten Kernel. Ist das Paket aktuell, der Server aber nicht neu gestartet, verschwindet die Meldung, obwohl der alte Kernel noch läuft.']]},
+   {id:'CVE-2023-44487', name:'HTTP/2 Rapid Reset', paket:'nginx', inst:'1.25.2', fix:'1.25.3', k:'s-hoch', st:'Hoch', cvss:'7.5', agent:'srv-web-01', os:'Debian 12', kev:true,
+    was:'Schwäche im HTTP/2-Protokoll: Der Angreifer öffnet Datenströme und bricht sie sofort wieder ab. Der Server arbeitet trotzdem jede Anfrage an. Damit wurden 2023 die bis dahin größten DDoS-Angriffe gefahren.',
+    vektor:'Netzwerk, ohne Anmeldung — Folge ist Ausfall, kein Datenabfluss',
+    m:[['Beheben','nginx auf 1.25.3 oder neuer aktualisieren.'],
+       ['Absichern','<code>keepalive_requests</code> nicht über 1000 und <code>http2_max_concurrent_streams</code> beim Standard 128 lassen; zusätzlich <code>limit_req</code> und <code>limit_conn</code> setzen.'],
+       ['Ergänzend','Öffentliche Dienste hinter einem CDN oder DDoS-Schutz betreiben, etwa Cloudflare.']]}
+  ];
+  var zeilen=[];
+  CV.forEach(function(c,i){
+    zeilen.push('<tr class="klick" tabindex="0" data-detail="cv'+i+'"><td class="mono" style="color:var(--primary)">'+c.id+'</td><td>'+c.name+
+      (c.kev?' <span class="pill rot" data-tip="Steht im CISA-Katalog der aktiv ausgenutzten Schwachstellen (KEV).">ausgenutzt</span>':'')+
+      '</td><td>'+c.paket+'</td><td class="mono">'+c.inst+'</td><td class="mono">'+c.fix+'</td><td><span class="stufe '+c.k+'">'+c.cvss+'</span></td><td class="agent">'+c.agent+'</td></tr>');
+    zeilen.push('<tr class="detail" id="cv'+i+'" hidden><td colspan="7"><div class="detail-inhalt cve">'+
+      '<div><h4>Worum es geht</h4><p class="cve-text">'+c.was+'</p>'+
+        '<dl class="felder opt" style="margin-top:10px"><dt>Schwere</dt><dd>'+c.st+', CVSS '+c.cvss+'</dd><dt>Angriffsweg</dt><dd>'+c.vektor+'</dd>'+
+        '<dt>Endpunkt</dt><dd>'+c.agent+' ('+c.os+')</dd><dt>Paket</dt><dd>'+c.paket+'</dd><dt>Installiert</dt><dd>'+c.inst+'</dd><dt>Behoben in</dt><dd>'+c.fix+'</dd>'+
+        (c.kev?'<dt>Ausgenutzt</dt><dd>ja, im CISA-KEV-Katalog</dd>':'')+'</dl></div>'+
+      '<div><h4>Maßnahmen</h4><ol class="massn">'+c.m.map(function(x){ return '<li><b>'+x[0]+'</b>'+x[1]+'</li>'; }).join('')+'</ol>'+
+        '<p class="cve-links"><a href="https://nvd.nist.gov/vuln/detail/'+c.id+'" target="_blank" rel="noopener">NVD</a> · '+
+        '<a href="https://www.cve.org/CVERecord?id='+c.id+'" target="_blank" rel="noopener">CVE.org</a></p></div>'+
+      '</div></td></tr>');
+  });
+  var krit=CV.filter(function(c){return c.k==='s-krit';}).length, kev=CV.filter(function(c){return c.kev;}).length;
+  return zahlen([[String(CV.length),'Offene Schwachstellen','',''],[String(krit),'Kritisch','rot','CVSS 9.0 bis 10.0'],[String(CV.length-krit),'Hoch','orange','CVSS 7.0 bis 8.9'],[String(kev),'Aktiv ausgenutzt','rot','Im CISA-Katalog der aktiv ausgenutzten Schwachstellen (KEV)']])+
+    '<div class="panel"><h3>Erkannte Schwachstellen im Paketbestand <span style="font-weight:400;color:var(--muted)">— Zeile anklicken für Details und Maßnahmen</span></h3>'+
+    tabelle([['CVE','Kennung im öffentlichen CVE-Verzeichnis'],['Bezeichnung',''],['Paket',''],['Installiert',''],['Behoben in','Version, ab der die Lücke geschlossen ist'],['CVSS','Schweregrad 0 bis 10'],['Agent','']], zeilen)+
+    '<p style="margin-top:12px;color:var(--muted);font-size:13px">Ermittelt aus dem gemeldeten Paketbestand, nicht durch einen aktiven Scan. Kein Netzverkehr zum Endpunkt, dafür nur so genau wie die Paketverwaltung. Die Endpunkte sind erfunden, die CVE-Angaben echt.</p></div>'+
+
+  '<div class="panel"><h3>So arbeitet man eine Schwachstelle ab</h3><ol class="massn gross">'+
+    '<li><b>Einordnen</b>Nicht nur nach CVSS sortieren. Wichtiger ist: Wird die Lücke schon ausgenutzt (CISA-KEV-Katalog, EPSS-Wert)? Ist der Dienst aus dem Internet erreichbar? Was liegt auf dem System?</li>'+
+    '<li><b>Frist setzen</b>Ein gängiges Raster: aktiv ausgenutzt und erreichbar innerhalb von 48 Stunden, kritisch innerhalb von 7 Tagen, hoch innerhalb von 30 Tagen, der Rest im normalen Wartungsfenster.</li>'+
+    '<li><b>Beheben</b>Paket aktualisieren, betroffene Dienste neu starten, bei Kernel und glibc neu booten. Geht das nicht sofort, eine Übergangslösung setzen und dokumentieren.</li>'+
+    '<li><b>Nachweisen</b>Nach dem nächsten Inventarlauf wechselt der Eintrag im Dashboard von „aktiv“ auf „behoben“. Wer nicht warten will, startet den Agenten neu — syscollector läuft dann sofort.</li>'+
+    '<li><b>Ausnahmen festhalten</b>Nicht behebbare Funde mit Begründung, Verantwortlichem und Ablaufdatum dokumentieren, statt sie einfach zu ignorieren.</li></ol></div>'+
+
+  '<div class="panel"><h3>Wo die Daten herkommen</h3>'+
+    tabelle([['Baustein',''],['Aufgabe','']],
+      [['syscollector (Agent)','Meldet installierte Pakete, unter Windows auch Programme und Hotfixes'],
+       ['Wazuh-CTI (Manager)','Liefert den CVE-Bestand aus NVD und den Sicherheitsmeldungen der Hersteller, aktualisiert sich selbst'],
+       ['&lt;vulnerability-detection&gt;','Einstellung am Manager: <code>enabled</code>, <code>index-status</code>, <code>feed-update-interval</code> (Standard 60m)'],
+       ['wazuh-states-vulnerabilities-*','Index mit dem aktuellen Stand je Agent und Paket — Grundlage der Ansicht im Dashboard'],
+       ['Felder','<code>vulnerability.id</code>, <code>vulnerability.severity</code>, <code>vulnerability.score.base</code>, <code>package.name</code>, <code>package.version</code>, <code>agent.name</code>']
+      ].map(function(r){ return '<tr><td class="mono">'+r[0]+'</td><td>'+r[1]+'</td></tr>'; }))+'</div>';
 },
 
 mitre:function(){
@@ -1122,19 +1217,21 @@ agentkonfig:function(){
   ];
 
   var intervalle = [
-    ['Dateiintegrität','&lt;syscheck&gt;','frequency','43200 s = 12 h','scan_time + scan_day','Sekunden; Echtzeit mit realtime/whodata je Verzeichnis'],
-    ['FIM-Abgleich','&lt;syscheck&gt;&lt;synchronization&gt;','interval / max_interval','5 m / 1 h','—','Wie oft die FIM-Datenbank mit dem Manager abgeglichen wird'],
-    ['Rootcheck','&lt;rootcheck&gt;','frequency','43200 s = 12 h','—','Sekunden'],
-    ['Härtungsprüfung','&lt;sca&gt;','interval','12h','day / wday / time','Einheiten s, m, h, d, w, M'],
-    ['Inventar','&lt;wodle name="syscollector"&gt;','interval','1h','—','Mindestens 60 s; kleinere Werte werden angehoben'],
-    ['Befehle','&lt;wodle name="command"&gt;','interval','—','day / wday / time','Einheiten s, m, h, d, w, M'],
-    ['Befehlsausgabe als Log','&lt;localfile&gt; command','frequency','—','—','Sekunden zwischen zwei Ausführungen'],
-    ['Docker','&lt;wodle name="docker-listener"&gt;','interval','1m','day / wday / time','Wartezeit bis zum Neuversuch nach einem Fehler'],
-    ['Cloud-Module','&lt;wodle name="aws-s3"&gt; u. a.','interval','je Modul','day / wday / time','Abrufintervall der API'],
-    ['Osquery','osquery.conf','interval je Abfrage','—','—','Steht in der Osquery-Konfiguration, nicht in Wazuh'],
-    ['Keepalive','&lt;client&gt;','notify_time','20 s (Vorlage: 10)','—','Lebenszeichen an den Manager'],
-    ['Neuverbindung','&lt;client&gt;','time-reconnect','60 s','—','Wartezeit, bevor der Agent die Verbindung neu aufbaut'],
-    ['Schwachstellen','Manager','—','—','—','Läuft auf dem Manager und nutzt das Inventar; auf dem Agenten nur syscollector einstellen']
+    ['Dateiintegrität','&lt;syscheck&gt;','frequency','43200 s = 12 h','1 s','nicht begrenzt','scan_time + scan_day','Sekunden; sinnvoll ab 1 h. Sofort: realtime/whodata je Verzeichnis'],
+    ['FIM-Abgleich','&lt;syscheck&gt;&lt;synchronization&gt;','interval / max_interval','5 m / 1 h','1 s','nicht begrenzt','—','Wie oft die FIM-Datenbank mit dem Manager abgeglichen wird'],
+    ['Rootcheck','&lt;rootcheck&gt;','frequency','43200 s = 12 h','1 s','nicht begrenzt','—','Sekunden'],
+    ['Härtungsprüfung','&lt;sca&gt;','interval','12h','1 s','nicht begrenzt','day / wday / time','Einheiten s, m, h, d, w, M'],
+    ['Inventar','&lt;wodle name="syscollector"&gt;','interval','1h','60 s','nicht begrenzt','—','Kleinere Werte hebt Wazuh auf 60 s an'],
+    ['Befehle','&lt;wodle name="command"&gt;','interval','—','1 s','nicht begrenzt','day / wday / time','Einheiten s, m, h, d, w, M'],
+    ['Befehlsausgabe als Log','&lt;localfile&gt; command','frequency','—','1 s','nicht begrenzt','—','Sekunden zwischen zwei Ausführungen'],
+    ['Docker','&lt;wodle name="docker-listener"&gt;','interval','1m','1 s','nicht begrenzt','day / wday / time','Wartezeit bis zum Neuversuch nach einem Fehler'],
+    ['Cloud-Module','&lt;wodle name="aws-s3"&gt; u. a.','interval','je Modul','1 s','nicht begrenzt','day / wday / time','Abrufintervall der API; Grenzen des Anbieters beachten'],
+    ['Osquery','osquery.conf','interval je Abfrage','—','—','—','—','Steht in der Osquery-Konfiguration, nicht in Wazuh'],
+    ['Keepalive','&lt;client&gt;','notify_time','20 s (Vorlage: 10)','1 s','unter der Trennfrist','—','Muss deutlich kürzer sein als agents_disconnection_time am Manager (Standard 10 min)'],
+    ['Neuverbindung','&lt;client&gt;','time-reconnect','60 s','1 s','nicht begrenzt','—','Wartezeit, bevor der Agent die Verbindung neu aufbaut'],
+    ['Puffer: Senderate','&lt;client_buffer&gt;','events_per_second','500','1','1000','—','Ereignisse je Sekunde vom Agenten zum Manager'],
+    ['Puffer: Größe','&lt;client_buffer&gt;','queue_size','5000','1','100000','—','Ereignisse, die bei Lastspitzen zwischengespeichert werden'],
+    ['Schwachstellen','Manager','—','—','—','—','—','Läuft auf dem Manager und nutzt das Inventar; auf dem Agenten nur syscollector einstellen']
   ];
   var zeilen=[];
   B.forEach(function(b,i){
@@ -1162,10 +1259,10 @@ agentkonfig:function(){
 
   '<div class="panel"><h3>Scan-Intervalle auf einen Blick</h3>'+
     '<p>Jedes Modul hat sein eigenes Intervall. Manche Module lassen sich statt im Intervall auch auf einen festen Zeitpunkt legen, zum Beispiel nachts, wenn die Last nicht stört.</p>'+
-    tabelle([['Funktion',''],['Block',''],['Option',''],['Standard',''],['Fester Zeitpunkt','Statt oder zusätzlich zum Intervall'],['Hinweis','']],
-      intervalle.map(function(r){ return '<tr><td>'+r[0]+'</td><td class="mono" style="color:var(--primary)">'+r[1]+'</td><td class="mono">'+r[2]+'</td><td class="mono">'+r[3]+'</td><td class="mono">'+r[4]+'</td><td style="color:var(--muted)">'+r[5]+'</td></tr>'; }))+
+    tabelle([['Funktion',''],['Einstellung','Block in ossec.conf oder agent.conf und die Option darin'],['Standard',''],['Minimum','Kleinster Wert, den Wazuh annimmt'],['Maximum','„nicht begrenzt“: Wazuh verlangt nur eine positive Zahl'],['Fester Zeitpunkt','Statt oder zusätzlich zum Intervall'],['Hinweis','']],
+      intervalle.map(function(r){ return '<tr><td>'+r[0]+'</td><td class="mono"><span style="color:var(--primary)">'+r[1]+'</span><br>'+r[2]+'</td><td class="mono" style="white-space:normal">'+r[3]+'</td><td class="mono">'+r[4]+'</td><td class="mono">'+r[5]+'</td><td class="mono" style="white-space:normal">'+r[6]+'</td><td style="color:var(--muted);min-width:180px">'+r[7]+'</td></tr>'; }))+
     '<pre class="hell" style="margin-top:14px"># Formate\ninterval      30s · 15m · 6h · 1d · 1w · 1M     (s, m, h, d, w, M)\nfrequency     3600                             (immer Sekunden)\ntime          02:30                            (hh:mm, 24 Stunden)\nwday          monday … sunday                  (nicht zusammen mit day)\nday           1 … 31                           (Tag im Monat)\nscan_time     02:00   scan_day  sunday          (nur syscheck)</pre>'+
-    '<p style="margin-top:12px;color:var(--muted);font-size:13px">Mit <code>wday</code> muss das Intervall ein Vielfaches von Wochen sein, mit <code>day</code> ein Vielfaches von Monaten. Kürzere Intervalle heißen mehr Last auf Endpunkt und Manager: Für Server sind 12 h bei FIM und SCA und 1 h beim Inventar ein guter Anfang, zeitkritische Verzeichnisse überwacht man besser mit <code>realtime</code> statt mit einem kurzen Intervall.</p></div>'+
+    '<p style="margin-top:12px;color:var(--muted);font-size:13px">„Nicht begrenzt“ heißt: Die Doku verlangt nur eine positive Zahl, ein festes Maximum gibt es nicht. Technisch geht fast alles ab 1 s — sinnvoll ist das selten, weil jeder Durchlauf Last erzeugt. Mit <code>wday</code> muss das Intervall ein Vielfaches von Wochen sein, mit <code>day</code> ein Vielfaches von Monaten. Kürzere Intervalle heißen mehr Last auf Endpunkt und Manager: Für Server sind 12 h bei FIM und SCA und 1 h beim Inventar ein guter Anfang, zeitkritische Verzeichnisse überwacht man besser mit <code>realtime</code> statt mit einem kurzen Intervall.</p></div>'+
 
   '<div class="panel"><h3>Einstellungen nach Bereich <span style="font-weight:400;color:var(--muted)">— Zeile anklicken für Optionen und Beispiel</span></h3>'+
     tabelle([['Block','Abschnitt in ossec.conf oder agent.conf'],['Bereich',''],['Regelt','']], zeilen)+'</div>'+
