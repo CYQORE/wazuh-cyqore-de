@@ -248,6 +248,13 @@ tr.offen{background:var(--primary-bg)}
 }
 .pill.gruen{background:var(--pill-ok-bg); color:var(--pill-ok)} .pill.rot{background:var(--pill-rot-bg); color:var(--pill-rot)}
 
+.weiter{font:inherit; font-size:13px; color:var(--primary); background:var(--primary-bg); border:1px solid transparent; border-radius:4px; padding:6px 11px; cursor:pointer}
+.weiter:hover{background:var(--primary); color:#fff}
+.weiter:focus-visible{outline:2px solid var(--primary); outline-offset:2px}
+.detail-inhalt.ak{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.felder.opt{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr)}
+.felder.opt dt{white-space:normal; overflow-wrap:anywhere}
+.felder.opt dd{word-break:normal; overflow-wrap:anywhere}
 /* Aufgeklappte Zeile */
 tr.detail > td{background:var(--detail); padding:0; border-bottom:1px solid var(--line)}
 .detail-inhalt{display:grid; grid-template-columns:repeat(auto-fit,minmax(238px,1fr)); gap:16px; padding:15px 14px}
@@ -725,6 +732,8 @@ var M = [
   quelle:'Agentendatenbank des Managers.',
   konfig:'Registrierung über <auth> auf Port 1515 oder von Hand mit agent-auth.',
   alarme:'Regeln 500 bis 506 melden Statuswechsel, etwa das Wegbleiben eines Agenten.'},
+ {id:'agentkonfig', g:'verw', n:'Agenten-Konfiguration', kurz:'Alle Funktionen und Scan-Intervalle des Agenten.',
+  tip:'Alle Funktionen des Wazuh-Agenten und ihre Einstellungen: Verbindung, Registrierung, Logquellen, Dateiintegrität, Rootcheck, Härtungsprüfung, Inventar, Befehle, Docker, Osquery, Cloud-Module und Active Response. Mit Scan-Intervallen, Standardwerten, Beispielen und dem Weg, alles zentral über Gruppen zu verteilen.'},
  {id:'rules', g:'verw', n:'Rules', kurz:'Mitgelieferter und eigener Regelsatz.',
   tip:'Alle Regeln, durchsuchbar nach ID, Stufe, Gruppe und Beschreibung. Mitgelieferte Regeln sind schreibgeschützt, eigene lassen sich hier bearbeiten.',
   zeigt:'Regelliste mit ID, Stufe, Beschreibung, Gruppen und Herkunftsdatei.',
@@ -1018,7 +1027,189 @@ agents:function(){
       ].map(function(r){ return '<tr><td class="mono">'+r[0]+'</td><td class="agent">'+r[1]+'</td><td class="mono">'+r[2]+
         '</td><td>'+r[3]+'</td><td class="mono">'+r[4]+'</td><td><span class="pill '+r[6]+'">'+r[5]+'</span></td>'+
         '<td style="color:var(--muted)">'+r[7]+'</td></tr>'; }))+
-    '<p style="margin-top:12px;color:var(--muted);font-size:13px">Ein Agent, der sich nicht mehr meldet, ist selbst ein Alarm — die Regeln 500 bis 506 decken das ab. Ebenso die abweichende Version bei <code>srv-mail-01</code>: Agenten dürfen älter sein als der Manager, aber nicht neuer.</p></div>';
+    '<p style="margin-top:12px;color:var(--muted);font-size:13px">Ein Agent, der sich nicht mehr meldet, ist selbst ein Alarm — die Regeln 500 bis 506 decken das ab. Ebenso die abweichende Version bei <code>srv-mail-01</code>: Agenten dürfen älter sein als der Manager, aber nicht neuer.</p>'+
+    '<p style="margin-top:10px;font-size:13px"><button type="button" class="weiter" data-go="agentkonfig">Alle Einstellungen und Scan-Intervalle der Agenten ›</button></p></div>';
+},
+
+agentkonfig:function(){
+  function x(s){ /* XML-Beispiel: Tags hervorheben, Kommentare dämpfen */
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/(&lt;!--.*?--&gt;)/g,'<i>$1</i>')
+      .replace(/(&lt;\/?[a-zA-Z_\-]+)((?:\s[^&]*?)?)(\/?&gt;)/g,'<b>$1</b>$2<b>$3</b>');
+  }
+  var B = [
+   {blk:'<client>', n:'Verbindung zum Manager', kurz:'Adresse, Port, Protokoll, Keepalive, Neustart',
+    o:[['server/address','—'],['server/port','1514'],['server/protocol','tcp'],['server/max_retries','5'],['server/retry_interval','10 s'],
+       ['notify_time','20 s (Vorlage: 10)'],['time-reconnect','60 s'],['auto_restart','yes'],['crypto_method','aes'],['config-profile','—']],
+    bsp:'<client>\n  <server>\n    <address>wazuh.example.de</address>\n    <port>1514</port>\n    <protocol>tcp</protocol>\n  </server>\n  <!-- zweiter Manager als Ausweichziel -->\n  <server>\n    <address>10.20.0.3</address>\n  </server>\n  <config-profile>debian, debian12</config-profile>\n  <notify_time>10</notify_time>\n  <time-reconnect>60</time-reconnect>\n  <auto_restart>yes</auto_restart>\n</client>',
+    h:'Mehrere <code>&lt;server&gt;</code>-Blöcke ergeben ein Failover in der angegebenen Reihenfolge. <code>auto_restart</code> sorgt dafür, dass der Agent nach einer neuen zentralen Konfiguration selbst neu startet. <code>config-profile</code> ordnet den Agenten Profilen zu, auf die <code>agent.conf</code> filtern kann.'},
+   {blk:'<enrollment>', n:'Registrierung', kurz:'Name, Gruppen, Passwort, Zertifikate',
+    o:[['enabled','yes'],['manager_address','wie server/address'],['port','1515'],['agent_name','Hostname'],['groups','default'],
+       ['authorization_pass_path','etc/authd.pass'],['server_ca_path','—'],['agent_certificate_path','—'],['agent_key_path','—'],['delay_after_enrollment','20 s'],['use_source_ip','no']],
+    bsp:'<client>\n  <enrollment>\n    <enabled>yes</enabled>\n    <agent_name>srv-web-01</agent_name>\n    <groups>linux,webserver</groups>\n    <authorization_pass_path>etc/authd.pass</authorization_pass_path>\n  </enrollment>\n</client>',
+    h:'Der Agent meldet sich beim ersten Start selbst über Port 1515 an und erhält seinen Schlüssel. Auf dem Manager sollte <code>&lt;auth&gt;&lt;use_password&gt;yes&lt;/use_password&gt;</code> aktiv sein — sonst kann sich jeder Rechner, der Port 1515 erreicht, als Agent eintragen. Die Gruppen aus <code>groups</code> bestimmen, welche <code>agent.conf</code> er bekommt.'},
+   {blk:'<client_buffer>', n:'Puffer gegen Ereignisfluten', kurz:'Warteschlange und Senderate',
+    o:[['disabled','no'],['queue_size','5000 (max. 100000)'],['events_per_second','500 (max. 1000)']],
+    bsp:'<client_buffer>\n  <disabled>no</disabled>\n  <queue_size>20000</queue_size>\n  <events_per_second>500</events_per_second>\n</client_buffer>',
+    h:'Der Puffer fängt Lastspitzen ab, etwa wenn ein Webserver unter einem Scan tausende Zeilen pro Sekunde schreibt. Läuft er voll, gehen Ereignisse verloren und der Agent meldet das selbst (Regelgruppe <code>agent_flooding</code>). Bei gesprächigen Servern <code>queue_size</code> erhöhen, den Puffer aber nie abschalten.'},
+   {blk:'<localfile>', n:'Logquellen', kurz:'Dateien, Windows-Kanäle, journald, Befehle',
+    o:[['location','Pfad, Platzhalter erlaubt'],['log_format','syslog, json, apache, audit, eventchannel, journald, macos, multi-line, command, full_command …'],['only-future-events','yes'],['query','Filter für eventchannel / macos'],['frequency','nur bei command'],['label','Zusatzfeld'],['ignore / restrict','Regex-Filter'],['age','nur Dateien jünger als']],
+    bsp:'<localfile>\n  <location>/var/log/nginx/access.log</location>\n  <log_format>apache</log_format>\n</localfile>\n\n<localfile>\n  <location>Security</location>\n  <log_format>eventchannel</log_format>\n  <query>Event/System[EventID=4625 or EventID=4720]</query>\n</localfile>\n\n<localfile>\n  <log_format>full_command</log_format>\n  <command>ss -tulpn</command>\n  <frequency>360</frequency>\n</localfile>',
+    h:'Hier entscheidet sich, was überhaupt beim Manager ankommt. Jede neue Anwendung braucht einen Eintrag — und auf dem Manager einen passenden Decoder. Unter Windows mit <code>query</code> filtern, sonst schickt der Kanal <code>Security</code> alles. Befehle über <code>agent.conf</code> laufen nur mit <code>logcollector.remote_commands=1</code> auf dem Agenten.'},
+   {blk:'<syscheck>', n:'Dateiintegrität (FIM)', kurz:'Überwachte Verzeichnisse, Echtzeit, who-data',
+    o:[['disabled','no'],['frequency','43200 s (12 h)'],['scan_time','feste Uhrzeit, z. B. 02:00'],['scan_day','Wochentag, z. B. sunday'],['scan_on_start','yes'],
+       ['directories','Attribute: realtime, whodata, report_changes, check_all, check_sum, check_sha256sum, check_size, check_owner, check_group, check_perm, check_mtime, check_inode, check_attrs, recursion_level, restrict, tags, follow_symbolic_link'],
+       ['alert_new_files','yes'],['ignore / registry_ignore','Pfad oder Regex'],['nodiff','kein Diff für diese Datei'],['diff_size_limit','50 MB'],['diff/disk_quota','1 GB'],
+       ['recursion_level','256'],['database','disk (oder memory)'],['file_limit','100000 Einträge'],['registry_limit','100000 Einträge'],
+       ['max_eps','50 Ereignisse/s'],['max_files_per_second','0 = unbegrenzt'],['process_priority','10 (nice-Wert)'],
+       ['skip_nfs / skip_dev / skip_sys / skip_proc','yes'],['windows_registry','Schlüssel, nur Windows'],['windows_audit_interval','300 s'],
+       ['whodata/provider','audit oder ebpf'],['synchronization/interval','5 m (max_interval 1 h)'],['synchronization/max_eps','10']],
+    bsp:'<syscheck>\n  <frequency>43200</frequency>\n  <!-- statt Intervall: jeden Sonntag um 02:00 -->\n  <!-- <scan_time>02:00</scan_time> -->\n  <!-- <scan_day>sunday</scan_day> -->\n  <directories check_all="yes" realtime="yes">/etc,/usr/bin,/usr/sbin</directories>\n  <directories whodata="yes" report_changes="yes">/var/www/html</directories>\n  <ignore>/etc/mtab</ignore>\n  <ignore type="sregex">.log$|.swp$</ignore>\n  <nodiff>/etc/ssl/private.key</nodiff>\n</syscheck>',
+    h:'<code>realtime</code> meldet sofort statt erst beim nächsten Lauf. <code>whodata</code> liefert zusätzlich Benutzer und Prozess — unter Linux braucht das <code>auditd</code>, unter Windows richtet der Agent die Überwachungsrichtlinie selbst ein. <code>report_changes</code> speichert Kopien für den Diff: nie auf Dateien mit Passwörtern, dafür gibt es <code>nodiff</code>.'},
+   {blk:'<rootcheck>', n:'Rootkit- und Anomalieprüfung', kurz:'Versteckte Prozesse, Ports, Dateien',
+    o:[['disabled','no'],['frequency','43200 s (12 h)'],['check_files','yes'],['check_trojans','yes'],['check_dev','yes'],['check_sys','yes'],['check_pids','yes'],['check_ports','yes'],['check_if','yes'],
+       ['check_unixaudit / check_winaudit / check_winapps / check_winmalware','ältere Prüfungen, heute durch SCA ersetzt'],
+       ['rootkit_files','etc/shared/rootkit_files.txt'],['rootkit_trojans','etc/shared/rootkit_trojans.txt'],['base_directory','/ bzw. C:\\'],['readall','no'],['ignore','Pfad oder Regex'],['skip_nfs','yes']],
+    bsp:'<rootcheck>\n  <disabled>no</disabled>\n  <frequency>43200</frequency>\n  <check_pids>yes</check_pids>\n  <check_ports>yes</check_ports>\n  <skip_nfs>yes</skip_nfs>\n</rootcheck>',
+    h:'Sucht nach Spuren, die ein Angreifer verstecken will: Prozesse, die <code>ps</code> nicht zeigt, Ports ohne Dienst, Netzwerkkarten im Promiscuous-Modus. <code>skip_nfs</code> anlassen — sonst durchsucht jeder Agent die Netzlaufwerke mit.'},
+   {blk:'<sca>', n:'Härtungsprüfung', kurz:'CIS-Richtlinien, Intervall, eigene Policies',
+    o:[['enabled','yes'],['scan_on_start','yes'],['interval','12h (s, m, h, d, w, M)'],['day','Tag im Monat 1–31'],['wday','Wochentag'],['time','Uhrzeit hh:mm'],['skip_nfs','yes'],['policies/policy','eigene YAML-Datei, Attribut enabled']],
+    bsp:'<sca>\n  <enabled>yes</enabled>\n  <scan_on_start>yes</scan_on_start>\n  <interval>12h</interval>\n  <policies>\n    <policy enabled="yes">etc/shared/cis_cyqore_debian12.yml</policy>\n  </policies>\n</sca>',
+    h:'Ohne Angabe wählt der Agent die mitgelieferte Richtlinie passend zum erkannten Betriebssystem. Eigene Richtlinien legt man in den Gruppenordner, dann werden sie mit verteilt. Richtlinien mit Befehlsprüfungen aus <code>agent.conf</code> brauchen <code>sca.remote_commands=1</code>.'},
+   {blk:'<wodle name="syscollector">', n:'Inventar', kurz:'Pakete, Ports, Prozesse, Benutzer, Dienste',
+    o:[['disabled','no'],['interval','1h'],['scan_on_start','yes'],['hardware / os / network','yes'],['packages','yes'],['ports','yes (Attribut all)'],['processes','yes'],['hotfixes','yes, nur Windows'],['users / groups','yes'],['services','yes'],['browser_extensions','yes'],['synchronization/max_eps','10']],
+    bsp:'<wodle name="syscollector">\n  <disabled>no</disabled>\n  <interval>1h</interval>\n  <scan_on_start>yes</scan_on_start>\n  <packages>yes</packages>\n  <ports all="no">yes</ports>\n  <processes>yes</processes>\n  <hotfixes>yes</hotfixes>\n</wodle>',
+    h:'Die Schwachstellenerkennung arbeitet nur mit dem, was syscollector liefert: <code>packages</code> und unter Windows <code>hotfixes</code> nie abschalten. <code>ports all="no"</code> meldet nur lauschende Ports statt jeder einzelnen Verbindung.'},
+   {blk:'<wodle name="command">', n:'Befehle nach Zeitplan', kurz:'Eigene Skripte regelmäßig ausführen',
+    o:[['disabled','no'],['tag','frei wählbarer Name'],['command','Befehl mit Argumenten'],['interval','2s bis 1M'],['run_on_start','yes'],['day / wday / time','fester Zeitpunkt'],
+       ['timeout','0 = unbegrenzt warten'],['ignore_output','no'],['verify_md5 / verify_sha1 / verify_sha256','Prüfsumme des Programms'],['skip_verification','no']],
+    bsp:'<wodle name="command">\n  <disabled>no</disabled>\n  <tag>backup-check</tag>\n  <command>/usr/local/bin/backup-check.sh</command>\n  <interval>1d</interval>\n  <time>06:30</time>\n  <run_on_start>no</run_on_start>\n  <timeout>120</timeout>\n  <verify_sha256>9f86d081…0a08</verify_sha256>\n</wodle>',
+    h:'Die Ausgabe landet wie eine Logzeile beim Manager und kann mit eigenen Decodern und Regeln ausgewertet werden — etwa „Backup älter als 24 Stunden“. Mit <code>verify_sha256</code> läuft nur das Skript, das man freigegeben hat. <code>day</code> und <code>wday</code> schließen sich gegenseitig aus. Aus <code>agent.conf</code> nur mit <code>wazuh_command.remote_commands=1</code>.'},
+   {blk:'<wodle name="docker-listener">', n:'Docker-Überwachung', kurz:'Container-Ereignisse auf dem Host',
+    o:[['disabled','no'],['interval','1m — Wartezeit bis zum nächsten Versuch nach einem Fehler'],['attempts','5'],['run_on_start','yes'],['day / wday / time','fester Zeitpunkt']],
+    bsp:'<wodle name="docker-listener">\n  <disabled>no</disabled>\n  <interval>10m</interval>\n  <attempts>5</attempts>\n  <run_on_start>yes</run_on_start>\n</wodle>',
+    h:'Hört auf den Docker-Ereignisstrom: Container gestartet, gestoppt, mit <code>--privileged</code> gestartet, Befehl per <code>exec</code> ausgeführt. Braucht Python und das Docker-Modul auf dem Host. Passt direkt zum VPS mit Traefik und Dockge.'},
+   {blk:'<wodle name="osquery">', n:'Osquery-Anbindung', kurz:'SQL-Abfragen auf das Betriebssystem',
+    o:[['disabled','no'],['run_daemon','yes'],['bin_path','Linux: leer · Windows: C:\\Program Files\\osquery\\osqueryd'],['log_path','/var/log/osquery/osqueryd.results.log'],['config_path','/etc/osquery/osquery.conf'],['add_labels','yes'],['pack','Abfragepaket, Attribut name']],
+    bsp:'<wodle name="osquery">\n  <disabled>no</disabled>\n  <run_daemon>yes</run_daemon>\n  <config_path>/etc/osquery/osquery.conf</config_path>\n  <add_labels>yes</add_labels>\n  <pack name="incident-response">/opt/osquery/packs/incident-response.conf</pack>\n</wodle>',
+    h:'Osquery muss separat installiert sein. Wie oft eine Abfrage läuft, steht nicht in Wazuh, sondern je Abfrage als <code>interval</code> in der Osquery-Konfiguration bzw. im Pack. <code>add_labels</code> hängt die Wazuh-Labels an jedes Ergebnis.'},
+   {blk:'Cloud-Module', n:'AWS, Azure, Google Cloud, GitHub, Office 365, MS Graph', kurz:'Abruf externer Logquellen',
+    o:[['aws-s3 / gcp-pubsub / azure-logs','interval, run_on_start, day, wday, time'],['github / office365 / ms-graph','interval, only_future_events, curl_max_size'],['Ort','Manager oder ein beliebiger Agent']],
+    bsp:'<wodle name="aws-s3">\n  <disabled>no</disabled>\n  <interval>10m</interval>\n  <run_on_start>yes</run_on_start>\n  <bucket type="cloudtrail">\n    <name>cyqore-trail</name>\n    <aws_profile>default</aws_profile>\n  </bucket>\n</wodle>',
+    h:'Diese Module holen Logs per API ab, statt sie vom Endpunkt zu lesen. Sie dürfen auf einem Agenten laufen — sinnvoll, wenn nur dieser Rechner die Zugangsdaten oder den Netzwerkweg hat. Jeweils nur auf <em>einem</em> System aktivieren, sonst kommen die Ereignisse doppelt.'},
+   {blk:'<active-response>', n:'Reaktion auf dem Endpunkt', kurz:'Befehle des Managers ausführen oder sperren',
+    o:[['disabled','no'],['repeated_offenders','Sperrzeiten in Minuten, z. B. 30,60,120']],
+    bsp:'<active-response>\n  <disabled>no</disabled>\n  <!-- Wiederholungstäter länger sperren -->\n  <repeated_offenders>30,60,120</repeated_offenders>\n</active-response>',
+    h:'Auf dem Agenten wird nur festgelegt, <em>ob</em> er Befehle ausführt — welche Regel welches Skript auslöst, steht auf dem Manager. Wer auf einem Server keine automatische Reaktion will, etwa auf einem Datenbankserver, schaltet sie hier mit <code>disabled</code> ab. Skripte liegen unter <code>active-response/bin/</code>.'},
+   {blk:'<labels>', n:'Eigene Kennzeichen', kurz:'Standort, Verantwortlicher, Kritikalität',
+    o:[['label key=…','Wert erscheint in jedem Alarm'],['hidden','yes = nur für Regeln, nicht im Alarm']],
+    bsp:'<labels>\n  <label key="standort">rz-koblenz</label>\n  <label key="kritikalitaet">hoch</label>\n  <label key="team">infrastruktur</label>\n</labels>',
+    h:'Kostet nichts und spart beim Auswerten viel: Jeder Alarm trägt die Labels als Felder <code>agent.labels.*</code>. Damit lässt sich im Dashboard nach Standort filtern oder eine Benachrichtigung nur für kritische Systeme einrichten.'},
+   {blk:'<agent-upgrade>', n:'Aktualisierung', kurz:'Signierte WPK-Pakete aus dem Manager',
+    o:[['ca_verification/enabled','yes'],['ca_verification/ca_store','wpk_root.pem'],['notification_wait_time','300 s']],
+    bsp:'<agent-upgrade>\n  <ca_verification>\n    <enabled>yes</enabled>\n    <ca_store>wpk_root.pem</ca_store>\n  </ca_verification>\n</agent-upgrade>',
+    h:'Agenten lassen sich zentral über das Dashboard oder die API aktualisieren. Die Signaturprüfung bleibt an — sonst könnte ein manipulierter Manager beliebige Pakete verteilen. Reihenfolge immer: erst Manager, dann Agenten.'},
+   {blk:'<logging>', n:'Eigenes Betriebslog', kurz:'Format des ossec.log',
+    o:[['log_format','plain, json oder beides']],
+    bsp:'<logging>\n  <log_format>plain,json</log_format>\n</logging>',
+    h:'Das Betriebslog des Agenten ist die erste Anlaufstelle, wenn er sich nicht verbindet: Linux <code>/var/ossec/logs/ossec.log</code>, Windows <code>C:\\Program Files (x86)\\ossec-agent\\ossec.log</code>. Mehr Details bringt <code>agent.debug=2</code> in <code>local_internal_options.conf</code>.'},
+   {blk:'local_internal_options.conf', n:'Interne Schalter', kurz:'Debug, entfernte Befehle, Feintuning',
+    o:[['agent.debug','0 (1–2 = ausführlicher)'],['logcollector.debug / syscheck.debug / wazuh_modules.debug','0'],
+       ['logcollector.remote_commands','0'],['wazuh_command.remote_commands','0'],['sca.remote_commands','0'],['syscheck.allow_remote_prefilter_cmd','0'],
+       ['logcollector.max_files','1000 gleichzeitig gelesene Dateien'],['logcollector.max_lines','10000 Zeilen je Durchlauf']],
+    bsp:'# /var/ossec/etc/local_internal_options.conf\n# wird bei Updates nicht überschrieben\nagent.debug=1\nlogcollector.remote_commands=1\nwazuh_command.remote_commands=1',
+    h:'Alles, was hier steht, gilt nur für diesen einen Agenten und wird bei Updates nicht überschrieben — im Gegensatz zu <code>internal_options.conf</code>, die man nie direkt ändern sollte. Debug-Stufen nach der Fehlersuche wieder auf 0, sonst wächst das <code>ossec.log</code> schnell.'}
+  ];
+
+  var intervalle = [
+    ['Dateiintegrität','&lt;syscheck&gt;','frequency','43200 s = 12 h','scan_time + scan_day','Sekunden; Echtzeit mit realtime/whodata je Verzeichnis'],
+    ['FIM-Abgleich','&lt;syscheck&gt;&lt;synchronization&gt;','interval / max_interval','5 m / 1 h','—','Wie oft die FIM-Datenbank mit dem Manager abgeglichen wird'],
+    ['Rootcheck','&lt;rootcheck&gt;','frequency','43200 s = 12 h','—','Sekunden'],
+    ['Härtungsprüfung','&lt;sca&gt;','interval','12h','day / wday / time','Einheiten s, m, h, d, w, M'],
+    ['Inventar','&lt;wodle name="syscollector"&gt;','interval','1h','—','Mindestens 60 s; kleinere Werte werden angehoben'],
+    ['Befehle','&lt;wodle name="command"&gt;','interval','—','day / wday / time','Einheiten s, m, h, d, w, M'],
+    ['Befehlsausgabe als Log','&lt;localfile&gt; command','frequency','—','—','Sekunden zwischen zwei Ausführungen'],
+    ['Docker','&lt;wodle name="docker-listener"&gt;','interval','1m','day / wday / time','Wartezeit bis zum Neuversuch nach einem Fehler'],
+    ['Cloud-Module','&lt;wodle name="aws-s3"&gt; u. a.','interval','je Modul','day / wday / time','Abrufintervall der API'],
+    ['Osquery','osquery.conf','interval je Abfrage','—','—','Steht in der Osquery-Konfiguration, nicht in Wazuh'],
+    ['Keepalive','&lt;client&gt;','notify_time','20 s (Vorlage: 10)','—','Lebenszeichen an den Manager'],
+    ['Neuverbindung','&lt;client&gt;','time-reconnect','60 s','—','Wartezeit, bevor der Agent die Verbindung neu aufbaut'],
+    ['Schwachstellen','Manager','—','—','—','Läuft auf dem Manager und nutzt das Inventar; auf dem Agenten nur syscollector einstellen']
+  ];
+  var zeilen=[];
+  B.forEach(function(b,i){
+    zeilen.push('<tr class="klick" tabindex="0" data-detail="ak'+i+'"><td class="mono" style="color:var(--primary)">'+x(b.blk).replace(/<\/?b>/g,'')+'</td>'+
+      '<td>'+b.n+'</td><td style="color:var(--muted)">'+b.kurz+'</td></tr>');
+    zeilen.push('<tr class="detail" id="ak'+i+'" hidden><td colspan="3"><div class="detail-inhalt ak">'+
+      '<div><h4>Optionen und Standardwerte</h4><dl class="felder opt">'+
+        b.o.map(function(o){ return '<dt>'+o[0]+'</dt><dd>'+o[1]+'</dd>'; }).join('')+'</dl></div>'+
+      '<div><h4>Beispiel</h4><pre>'+x(b.bsp)+'</pre></div>'+
+      '<div><h4>Worauf es ankommt</h4><div class="treffer"><b>'+b.n+'</b><span>'+b.h+'</span></div></div>'+
+      '</div></td></tr>');
+  });
+
+  return '<div class="panel"><h3>Wo die Einstellungen liegen</h3>'+
+    '<p>Jeder Agent hat eine eigene <code>ossec.conf</code>. Dazu kommt die zentrale <code>agent.conf</code> seiner Gruppen, die der Manager verteilt. Bei gleichen Optionen gilt die zentrale Einstellung; was nur lokal steht, bleibt wirksam.</p>'+
+    tabelle([['Datei',''],['System',''],['Zweck','']],
+      [['/var/ossec/etc/ossec.conf','Linux','Lokale Konfiguration des Agenten'],
+       ['C:\\Program Files (x86)\\ossec-agent\\ossec.conf','Windows','Lokale Konfiguration, auch über Wazuh Agent Manager (win32ui.exe)'],
+       ['/Library/Ossec/etc/ossec.conf','macOS','Lokale Konfiguration'],
+       ['/var/ossec/etc/shared/&lt;gruppe&gt;/agent.conf','Manager','Zentrale Konfiguration je Gruppe, wird automatisch verteilt'],
+       ['/var/ossec/etc/local_internal_options.conf','Agent','Interne Schalter: Debug-Stufen, Freigabe entfernter Befehle — wird nie überschrieben'],
+       ['/var/ossec/etc/shared/merged.mg','Agent','Was der Agent vom Manager tatsächlich empfangen hat']
+      ].map(function(r){ return '<tr><td class="mono">'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td></tr>'; }))+
+    '<p style="margin-top:12px;color:var(--muted);font-size:13px">Faustregel: In die lokale <code>ossec.conf</code> gehört nur, was den Agenten mit dem Manager verbindet. Alles Fachliche — Logquellen, überwachte Verzeichnisse, Prüfintervalle — gehört in die <code>agent.conf</code> der Gruppe. Dann ändert man es einmal statt auf jedem Rechner.</p></div>'+
+
+  '<div class="panel"><h3>Scan-Intervalle auf einen Blick</h3>'+
+    '<p>Jedes Modul hat sein eigenes Intervall. Manche Module lassen sich statt im Intervall auch auf einen festen Zeitpunkt legen, zum Beispiel nachts, wenn die Last nicht stört.</p>'+
+    tabelle([['Funktion',''],['Block',''],['Option',''],['Standard',''],['Fester Zeitpunkt','Statt oder zusätzlich zum Intervall'],['Hinweis','']],
+      intervalle.map(function(r){ return '<tr><td>'+r[0]+'</td><td class="mono" style="color:var(--primary)">'+r[1]+'</td><td class="mono">'+r[2]+'</td><td class="mono">'+r[3]+'</td><td class="mono">'+r[4]+'</td><td style="color:var(--muted)">'+r[5]+'</td></tr>'; }))+
+    '<pre class="hell" style="margin-top:14px"># Formate\ninterval      30s · 15m · 6h · 1d · 1w · 1M     (s, m, h, d, w, M)\nfrequency     3600                             (immer Sekunden)\ntime          02:30                            (hh:mm, 24 Stunden)\nwday          monday … sunday                  (nicht zusammen mit day)\nday           1 … 31                           (Tag im Monat)\nscan_time     02:00   scan_day  sunday          (nur syscheck)</pre>'+
+    '<p style="margin-top:12px;color:var(--muted);font-size:13px">Mit <code>wday</code> muss das Intervall ein Vielfaches von Wochen sein, mit <code>day</code> ein Vielfaches von Monaten. Kürzere Intervalle heißen mehr Last auf Endpunkt und Manager: Für Server sind 12 h bei FIM und SCA und 1 h beim Inventar ein guter Anfang, zeitkritische Verzeichnisse überwacht man besser mit <code>realtime</code> statt mit einem kurzen Intervall.</p></div>'+
+
+  '<div class="panel"><h3>Einstellungen nach Bereich <span style="font-weight:400;color:var(--muted)">— Zeile anklicken für Optionen und Beispiel</span></h3>'+
+    tabelle([['Block','Abschnitt in ossec.conf oder agent.conf'],['Bereich',''],['Regelt','']], zeilen)+'</div>'+
+
+  '<div class="panel"><h3>Zentral verteilen mit <code>agent.conf</code></h3>'+
+    '<pre>'+x('<!-- /var/ossec/etc/shared/webserver/agent.conf -->\n'+
+      '<agent_config>\n  <localfile>\n    <location>/var/log/nginx/*.log</location>\n    <log_format>apache</log_format>\n  </localfile>\n</agent_config>\n\n'+
+      '<!-- nur für Linux-Agenten dieser Gruppe -->\n<agent_config os="Linux">\n  <syscheck>\n    <directories whodata="yes">/var/www</directories>\n  </syscheck>\n</agent_config>\n\n'+
+      '<!-- nur für einen bestimmten Agenten -->\n<agent_config name="srv-web-01">\n  <labels>\n    <label key="kritikalitaet">hoch</label>\n  </labels>\n</agent_config>\n\n'+
+      '<!-- nur für Agenten mit diesem config-profile -->\n<agent_config profile="debian12">\n  <sca>\n    <interval>6h</interval>\n  </sca>\n</agent_config>')+'</pre>'+
+    '<p style="margin-top:12px;font-size:13px">Vor dem Speichern prüfen: <code>/var/ossec/bin/verify-agent-conf</code>. Der Agent holt die Änderung beim nächsten Keepalive und startet mit <code>auto_restart</code> selbst neu. Steckt er in mehreren Gruppen, werden die Dateien zusammengeführt; die zuletzt zugewiesene Gruppe gewinnt bei Konflikten.</p>'+
+    '<p style="margin-top:8px;color:var(--muted);font-size:13px">Befehle, die über <code>agent.conf</code> auf den Agenten kommen, führt er aus Sicherheitsgründen erst aus, wenn es lokal erlaubt ist — sonst könnte jeder mit Zugriff auf den Manager Befehle auf allen Endpunkten starten. Die Schalter in <code>local_internal_options.conf</code>: <code>logcollector.remote_commands=1</code>, <code>wazuh_command.remote_commands=1</code>, <code>sca.remote_commands=1</code>. Nur dort setzen, wo es gebraucht wird.</p></div>'+
+
+  '<div class="panel"><h3>Einstellungen schon bei der Installation</h3>'+
+    '<p>Die Installationspakete lesen Umgebungsvariablen und schreiben sie in die <code>ossec.conf</code>. So ist der Agent nach der Installation fertig eingerichtet und landet gleich in der richtigen Gruppe.</p>'+
+    '<pre class="hell"># Debian / Ubuntu\nWAZUH_MANAGER="wazuh.example.de" WAZUH_AGENT_GROUP="linux,webserver" \\\nWAZUH_AGENT_NAME="srv-web-01" WAZUH_REGISTRATION_PASSWORD="…" \\\n  apt-get install wazuh-agent\nsystemctl daemon-reload &amp;&amp; systemctl enable --now wazuh-agent\n\n# Windows (PowerShell als Administrator)\nmsiexec.exe /i wazuh-agent-4.14.0-1.msi /q WAZUH_MANAGER="wazuh.example.de" `\n  WAZUH_AGENT_GROUP="windows,buchhaltung" WAZUH_REGISTRATION_PASSWORD="…"\nNET START Wazuh</pre>'+
+    tabelle([['Variable',''],['Wirkt auf','']],
+      [['WAZUH_MANAGER','&lt;client&gt;&lt;server&gt;&lt;address&gt;'],['WAZUH_MANAGER_PORT','Port 1514'],['WAZUH_PROTOCOL','tcp oder udp'],
+       ['WAZUH_REGISTRATION_SERVER','Enrollment-Ziel, falls abweichend'],['WAZUH_REGISTRATION_PASSWORD','Passwort für die Anmeldung'],
+       ['WAZUH_AGENT_NAME','Name im Agentenbestand'],['WAZUH_AGENT_GROUP','Gruppen, kommagetrennt'],['ENROLLMENT_DELAY','Wartezeit nach der Anmeldung']
+      ].map(function(r){ return '<tr><td class="mono">'+r[0]+'</td><td class="mono">'+r[1]+'</td></tr>'; }))+
+    '<p style="margin-top:12px;color:var(--muted);font-size:13px">Nach der Installation die Wazuh-Paketquelle deaktivieren oder das Paket festhalten (<code>apt-mark hold wazuh-agent</code>). Sonst zieht ein normales Systemupdate einen Agenten, der neuer ist als der Manager — und der verbindet sich nicht mehr.</p></div>'+
+
+  '<div class="panel"><h3>Befehle für den Alltag</h3>'+
+    tabelle([['Befehl',''],['Wo',''],['Wofür','']],
+      [['/var/ossec/bin/agent_control -l','Manager','Alle Agenten mit Status'],
+       ['/var/ossec/bin/agent_control -i 001','Manager','Details zu einem Agenten'],
+       ['/var/ossec/bin/agent_control -R -u 001','Manager','Agenten neu starten'],
+       ['/var/ossec/bin/agent_groups -a -i 001 -g webserver','Manager','Agenten einer Gruppe zuweisen'],
+       ['/var/ossec/bin/manage_agents -r 001','Manager','Agenten entfernen'],
+       ['GET /agents/001/config/syscheck/syscheck','API','Laufende Konfiguration abfragen — zeigt, was wirklich aktiv ist'],
+       ['PUT /agents/upgrade?agents_list=001','API','Agenten zentral aktualisieren'],
+       ['systemctl restart wazuh-agent','Agent','Nach Änderungen an der lokalen ossec.conf'],
+       ['/var/ossec/bin/wazuh-control status','Agent','Welche Dienste laufen'],
+       ['tail -f /var/ossec/logs/ossec.log','Agent','Verbindungs- und Konfigurationsfehler']
+      ].map(function(r){ return '<tr><td class="mono">'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td></tr>'; }))+'</div>'+
+
+  '<div class="panel"><h3>Häufige Stolperfallen</h3><ul style="margin:0;padding-left:17px;font-size:13.5px">'+
+    '<li style="margin-bottom:7px"><b>Uhrzeit:</b> Zeitstempel kommen vom Endpunkt. Ohne NTP stehen Alarme zur falschen Zeit in der Suche und Korrelationen über mehrere Agenten gehen daneben.</li>'+
+    '<li style="margin-bottom:7px"><b>Doppelter Name:</b> Ein neu aufgesetzter Rechner mit altem Namen wird abgewiesen, solange der alte Eintrag besteht. Erst mit <code>manage_agents -r</code> entfernen.</li>'+
+    '<li style="margin-bottom:7px"><b>Klone:</b> Aus einem Image geklonte Rechner teilen sich <code>client.keys</code>. Vor dem Erstellen des Images den Agenten stoppen und <code>/var/ossec/etc/client.keys</code> leeren.</li>'+
+    '<li style="margin-bottom:7px"><b>FIM auf zu viel:</b> Echtzeit auf ganze Datenpartitionen oder <code>/var/log</code> erzeugt Last und Rauschen. Gezielt die Verzeichnisse überwachen, die sich selten ändern dürfen.</li>'+
+    '<li style="margin-bottom:7px"><b>Getrennt-Meldung zu spät:</b> Wann ein Agent als getrennt gilt, steht nicht auf dem Agenten, sondern am Manager in <code>&lt;remote&gt;&lt;agents_disconnection_time&gt;</code>.</li>'+
+    '<li><b>Konfigurationsfehler:</b> Ein Tippfehler in der <code>agent.conf</code> legt nicht nur einen, sondern alle Agenten der Gruppe lahm. Deshalb immer <code>verify-agent-conf</code> vor dem Speichern.</li></ul></div>';
 },
 
 rules:function(){
